@@ -28,8 +28,3 @@ void rsa_encrypt(mpz_t c, const mpz_t m, const struct rsa_key *key);
 void rsa_decrypt(mpz_t m, const mpz_t c, const struct rsa_key *key);
 
 void rsa_genkey(struct rsa_key *key, unsigned int numbits);
-<<<<<<< HEAD
-
-void generate_prime(mpz_t p, unsigned int numbits) // jk: should delete
-=======
->>>>>>> 6e39764729fd3136c7714034dca6c73ca9688a48
