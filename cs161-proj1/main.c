@@ -60,17 +60,17 @@ static char *decode(const mpz_t x, size_t *len)
 static int encrypt_mode(const char *key_filename, const char *message)
 {
 	/* TODO */
-	static struct rsa_key *key_new;
+	static struct rsa_key key_new;
 
-	rsa_key_init(key_new);
-	rsa_key_load_public(key_filename, key_new);
+	rsa_key_init(&key_new);
+	rsa_key_load_public(key_filename, &key_new);
 	mpz_t msg_encoded;
 	encode(msg_encoded, message);
 	mpz_t msg_encrypted;
-	rsa_encrypt(msg_encrypted, msg_encoded, key_new);
+	rsa_encrypt(msg_encrypted, msg_encoded, &key_new);
 	gmp_printf("%Zd\n", msg_encrypted);
 	gmp_printf("in the encrypt mode\n");
-	rsa_key_clear(key_new);
+	rsa_key_clear(&key_new);
 	return 0;
 	fprintf(stderr, "encrypt not yet implemented\n");
 	return 1;
