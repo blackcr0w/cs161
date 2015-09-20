@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <gmp.h>
 
@@ -167,9 +168,11 @@ int rsa_key_load_public(const char *filename, struct rsa_key *key)
 
 /* Compute the encryption of m under the given key and store the result in c.
  * c = m^e mod n */
+// jk: do not need pointer to pass the value of c?
 void rsa_encrypt(mpz_t c, const mpz_t m, const struct rsa_key *key)
 {
 	/* TODO */
+	mpz_powm(c, m, key->e, key->n);
 }
 
 /* Compute the decryption of c under the given key and store the result in m.

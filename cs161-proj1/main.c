@@ -55,9 +55,23 @@ static char *decode(const mpz_t x, size_t *len)
  *
  * The return value is the exit code of the program as a whole: nonzero if there
  * was an error; zero otherwise. */
+// jk: why static int here
+// jk: how to return.
 static int encrypt_mode(const char *key_filename, const char *message)
 {
 	/* TODO */
+	static struct rsa_key *key_new;
+
+	rsa_key_init(key_new);
+	rsa_key_load_public(key_filename, key_new);
+	mpz_t msg_encoded;
+	encode(msg_encoded, message);
+	mpz_t msg_encrypted;
+	rsa_encrypt(msg_encrypted, msg_encoded, key_new);
+	gmp_printf("%Zd\n", msg_encrypted);
+	gmp_printf("in the encrypt mode\n");
+	rsa_key_clear(key_new);
+	return 0;
 	fprintf(stderr, "encrypt not yet implemented\n");
 	return 1;
 }
@@ -88,7 +102,8 @@ static int genkey_mode(const char *numbits_str)
 
 int main(int argc, char *argv[])
 {
-	mpz_t a, b, c;
+
+/*	mpz_t a, b, c;
 	mpz_init(a);
 	mpz_init(b);
 	mpz_init(c);
@@ -100,7 +115,10 @@ int main(int argc, char *argv[])
 	mpz_clear(a);
 	mpz_clear(b);
 	mpz_clear(c);
-	
+
+	gmp_printf("%Zd\n", message_encode("test"));
+*/
+
 	const char *command;
 
 	if (argc < 2) {
