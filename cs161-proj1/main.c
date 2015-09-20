@@ -60,8 +60,17 @@ static char *decode(const mpz_t x, size_t *len)
 static int encrypt_mode(const char *key_filename, const char *message)
 {
 	/* TODO */
+<<<<<<< HEAD
 	static struct rsa_key key_new;
 
+=======
+
+/*	mpz_t init_d = 0;
+	mpz_t init_e = 0;
+	mpz_t init_n = 0;*/
+
+	struct rsa_key key_new;
+>>>>>>> 6e39764729fd3136c7714034dca6c73ca9688a48
 	rsa_key_init(&key_new);
 	rsa_key_load_public(key_filename, &key_new);
 	mpz_t msg_encoded;
