@@ -55,34 +55,51 @@ static char *decode(const mpz_t x, size_t *len)
  *
  * The return value is the exit code of the program as a whole: nonzero if there
  * was an error; zero otherwise. */
-// jk: why static int here
-// jk: how to return.
+// jk: use message to store the encrypted msg
+// print the encrypted info here?
+// how to do with the error case?
+// how to judge private and public?
+// remember: both pub and priv key can be used for encrypt
 static int encrypt_mode(const char *key_filename, const char *message)
 {
 	/* TODO */
-<<<<<<< HEAD
-	static struct rsa_key key_new;
 
-=======
+	struct rsa_key new_key;
+	rsa_key_init(&new_key);
+	const char *priv_key = ".priv";
+    const char *pub_key = ".pub";
+    char *ret;
 
-/*	mpz_t init_d = 0;
-	mpz_t init_e = 0;
-	mpz_t init_n = 0;*/
+    ret = strstr(key_filename, priv_key);
+    if (ret == NULL) {
+    	ret = strstr(key_filename, pub_key);
+    	if (ret == NULL) {
+    		printf("ERROR: do not match any key file.\n");
+    		rsa_key_clear(&new_key);
+    		return 1;
+    	}
+    	else 
+    		rsa_key_load_public(key_filename, &new_key);
+    }
 
-	struct rsa_key key_new;
->>>>>>> 6e39764729fd3136c7714034dca6c73ca9688a48
-	rsa_key_init(&key_new);
-	rsa_key_load_public(key_filename, &key_new);
-	mpz_t msg_encoded;
+    else
+    	rsa_key_load_private(key_filename, &new_key);
+
+
+	mpz_t msg_encoded, msg_encrypted;
+	mpz_init(msg_encoded);
+	mpz_init(msg_encrypted);
+
 	encode(msg_encoded, message);
-	mpz_t msg_encrypted;
-	rsa_encrypt(msg_encrypted, msg_encoded, &key_new);
+
+	rsa_encrypt(msg_encrypted, msg_encoded, &new_key);
+
 	gmp_printf("%Zd\n", msg_encrypted);
-	gmp_printf("in the encrypt mode\n");
-	rsa_key_clear(&key_new);
+
+	mpz_clear(msg_encoded);
+	mpz_clear(msg_encrypted);
+	rsa_key_clear(&new_key);
 	return 0;
-	fprintf(stderr, "encrypt not yet implemented\n");
-	return 1;
 }
 
 /* The "decrypt" subcommand. c_str should be the string representation of an

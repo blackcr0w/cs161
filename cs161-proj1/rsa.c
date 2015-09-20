@@ -31,6 +31,7 @@ void rsa_key_clear(struct rsa_key *key)
  * that doesn't impose any restraints on the presence of "d", "e", and "n". See
  * rsa_key_load_private and rsa_load_key_public for functions that check these
  * contraints. The return value is -1 if there was an error; 0 otherwise. */
+ //jk: directly use rsa_key_load
 int rsa_key_read(FILE *fp, struct rsa_key *key)
 {
 	mpz_t value;
