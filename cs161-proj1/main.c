@@ -103,6 +103,19 @@ static int encrypt_mode(const char *key_filename, const char *message)
 	return 0;
 }
 
+void remove_char(char *str, char garbage) {
+
+    char *src, *dst;
+    for (src = dst = str; *src != '\0'; src++) {
+        *dst = *src;
+        if (*dst != garbage) dst++;
+    } 
+    *dst = '\0';
+	FILE* fout = fopen("./out_temp", "w");
+	fprintf(fout, "%s\n", str);
+	fclose(fout);
+}
+
 /* The "decrypt" subcommand. c_str should be the string representation of an
  * integer ciphertext.
  *
@@ -129,14 +142,23 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
 	mpz_init(msg_decrypted);
 	mpz_init(msg_encrypted);
     // jk: convert c_str to mpz_t
-    mpz_set_str(msg_encrypted, c_str, 10);
+    char *c_str_edti = (char *)malloc(strlen(c_str));
+    strcpy(c_str_edti, c_str);
+    remove_char(c_str_edti, '\n');
+    /*FILE* fout = fopen("./out", "w");
+	fprintf(fout, "%s\n", c_str_edti);
+	fclose(fout);*/   
+    mpz_set_str(msg_encrypted, c_str_edti, 10);
     //convert_str_to_mzp(c_str, msg_encrypted);
     rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);
     char *msg_decoded = decode(msg_decrypted, NULL);
     /* Wired problem: msg_decoded is always ended up with "0a". */
     /*char *msg_decode_modify = (char *)malloc(strlen(msg_decoded));
     fprintf(stdout, "%s\n", "here1");
-    memmove(msg_decode_modify, msg_decoded, strlen(msg_decoded) - 2);*/
+    memmove(msg_decode_modify, msg_decoded, strlen(msg_decoded) - 1);*/
+/*    FILE* out_file = fopen("./out", "w");
+	fprintf(out_file, "%s\n", msg_decoded);
+	fclose(out_file);*/
 
 	fprintf(stdout, "%s\n", msg_decoded);
 	mpz_clear(msg_decrypted);
