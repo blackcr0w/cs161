@@ -19,6 +19,7 @@ static int usage(FILE *fp)
 /* Encode the string s into an integer and store it in x. We're assuming that s
  * does not have any leading \x00 bytes (otherwise we would have to encode how
  * many leading zeros there are). */
+// jk: do not understand this part
 static void encode(mpz_t x, const char *s)
 {
 	mpz_import(x, strlen(s), 1, 1, 0, 0, s);
@@ -74,7 +75,7 @@ static int encrypt_mode(const char *key_filename, const char *message)
     if (ret == NULL) {
     	ret = strstr(key_filename, pub_key);
     	if (ret == NULL) {
-    		printf("ERROR: do not match any key file.\n");
+    		fprintf(stderr, "%s\n", "ERROR: \"filename\" do not match any key file.");
     		rsa_key_clear(&new_key);
     		return 1;
     	}
@@ -82,7 +83,7 @@ static int encrypt_mode(const char *key_filename, const char *message)
     		rsa_key_load_public(key_filename, &new_key);
     }
 
-    else
+    else  // jk: should re-consider this part, and the declaration of .priv
     	rsa_key_load_private(key_filename, &new_key);
 
 
@@ -110,8 +111,41 @@ static int encrypt_mode(const char *key_filename, const char *message)
 static int decrypt_mode(const char *key_filename, const char *c_str)
 {
 	/* TODO */
-	fprintf(stderr, "decrypt not yet implemented\n");
-	return 1;
+	struct rsa_key priv_key;
+	rsa_key_init(&priv_key);
+	const char *priv_key_file = ".priv";
+    char *ret;	
+    /* First, check whether the key_filename is .priv */
+    ret = strstr(key_filename, priv_key_file);
+    if (ret == NULL) {
+    	fprintf(stderr, "%s\n", "ERROR: Must use .priv to decrypt.");
+    	rsa_key_clear(&priv_key);
+    	return 1;
+    }
+    else
+    	rsa_key_load_private(key_filename, &priv_key);
+
+	mpz_t msg_decrypted, msg_encrypted;
+	mpz_init(msg_decrypted);
+	mpz_init(msg_encrypted);
+    // jk: convert c_str to mpz_t
+    mpz_set_str(msg_encrypted, c_str, 10);
+    //convert_str_to_mzp(c_str, msg_encrypted);
+    rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);
+    char *msg_decoded = decode(msg_decrypted, NULL);
+    /* Wired problem: msg_decoded is always ended up with "0a". */
+    /*char *msg_decode_modify = (char *)malloc(strlen(msg_decoded));
+    fprintf(stdout, "%s\n", "here1");
+    memmove(msg_decode_modify, msg_decoded, strlen(msg_decoded) - 2);*/
+
+	fprintf(stdout, "%s\n", msg_decoded);
+	mpz_clear(msg_decrypted);
+	mpz_clear(msg_encrypted);
+	rsa_key_clear(&priv_key);
+	free(msg_decoded);
+	//free (msg_decode_modify);
+
+	return 0;
 }
 
 /* The "genkey" subcommand. numbits_str should be the string representation of

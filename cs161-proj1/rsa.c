@@ -181,6 +181,7 @@ void rsa_encrypt(mpz_t c, const mpz_t m, const struct rsa_key *key)
 void rsa_decrypt(mpz_t m, const mpz_t c, const struct rsa_key *key)
 {
 	/* TODO */
+	mpz_powm (m, c, key->d, key->n);
 }
 
 /* Generate a random probable prime. numbits must be a multiple of 8 (i.e., a
