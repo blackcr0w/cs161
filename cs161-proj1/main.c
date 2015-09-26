@@ -103,15 +103,6 @@ static int encrypt_mode(const char *key_filename, const char *message)
 	return 0;
 }
 
-/*void remove_char(char* str, char c) {
-    char *pr = str, *pw = str;
-    while (*pr) {
-        *pw = *pr++;
-        pw += (*pw != c);
-    }
-    *pw = '\0';
-}
-*/
 /* The "decrypt" subcommand. c_str should be the string representation of an
  * integer ciphertext.
  *
@@ -143,29 +134,18 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
     size_t ln = strlen(c_str_edti) - 1;
 	if (c_str_edti[ln] == '\n')
 	    c_str_edti[ln] = '\0';
-    //remove_char(c_str_edti, '\n');
-    /*FILE* fout = fopen("./out_temp", "w");
-	fprintf(fout, "%s\n", c_str_edti);
-	fclose(fout);*/
 
     mpz_set_str(msg_encrypted, c_str_edti, 10);
     //convert_str_to_mzp(c_str, msg_encrypted);
     rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);
     char *msg_decoded = decode(msg_decrypted, NULL);
-    /* Wired problem: msg_decoded is always ended up with "0a". */
-    /*char *msg_decode_modify = (char *)malloc(strlen(msg_decoded));
-    fprintf(stdout, "%s\n", "here1");
-    memmove(msg_decode_modify, msg_decoded, strlen(msg_decoded) - 1);*/
-    /*FILE* out_file = fopen("./out", "w");
-	fprintf(out_file, "%s\n", msg_decoded);
-	fclose(out_file);*/
 
 	fprintf(stdout, "%s", msg_decoded);
 	mpz_clear(msg_decrypted);
 	mpz_clear(msg_encrypted);
 	rsa_key_clear(&priv_key);
 	free(msg_decoded);
-	//free (msg_decode_modify);
+	free(c_str_edti);
 
 	return 0;
 }
