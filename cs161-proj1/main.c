@@ -23,6 +23,7 @@ static int usage(FILE *fp)
 static void encode(mpz_t x, const char *s)
 {
 	mpz_import(x, strlen(s), 1, 1, 0, 0, s);
+	//mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
 }
 
 /* Decode the integer x into a NUL-terminated string and return the string. The
@@ -128,18 +129,27 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
 	mpz_t msg_decrypted, msg_encrypted;
 	mpz_init(msg_decrypted);
 	mpz_init(msg_encrypted);
+	char *c_str_edti = (char *)malloc(strlen(c_str));
+	strcpy(c_str_edti, c_str);
+	strtok(c_str_edti, "\n");
     // jk: convert c_str to mpz_t
-    char *c_str_edti = (char *)malloc(strlen(c_str));
-    strcpy(c_str_edti, c_str);
-    size_t ln = strlen(c_str_edti) - 1;
+/*    size_t ln = strlen(c_str_edti) - 1;
 	if (c_str_edti[ln] == '\n')
-	    c_str_edti[ln] = '\0';
-
+	    c_str_edti[ln] = '\0';*/
     mpz_set_str(msg_encrypted, c_str_edti, 10);
-    //convert_str_to_mzp(c_str, msg_encrypted);
-    rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);
+
+/*    FILE* fout = fopen("./out", "w");
+	fprintf(fout, "%s\n", c_str_edti);
+	fclose(fout);*/
+
+    rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);  
+
     char *msg_decoded = decode(msg_decrypted, NULL);
 
+/*    FILE* fout1 = fopen("./out1", "w");
+	fprintf(fout1, "%s\n", msg_decoded);
+	fclose(fout1);
+*/
 	fprintf(stdout, "%s", msg_decoded);
 	mpz_clear(msg_decrypted);
 	mpz_clear(msg_encrypted);
@@ -158,8 +168,23 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
 static int genkey_mode(const char *numbits_str)
 {
 	/* TODO */
-	fprintf(stderr, "genkey not yet implemented\n");
-	return 1;
+	// jk: print the error return value
+	unsigned int numbits;
+	struct rsa_key key;
+
+	rsa_key_init(&key);
+	char *numbits_str_edit = (char *)malloc(strlen(numbits_str));
+	strcpy(numbits_str_edit, numbits_str);
+	strtok(numbits_str_edit, "\n");
+	numbits = (unsigned int)strtoul(numbits_str_edit, NULL, 10);
+	rsa_genkey(&key, numbits);
+
+	if (rsa_key_write(stdout, &key) < 0)
+		return 1;
+
+	rsa_key_clear(&key);
+	free(numbits_str_edit);
+	return 0;
 }
 
 int main(int argc, char *argv[])

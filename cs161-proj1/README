@@ -1,0 +1,19 @@
+This README is my thoughts on this project.
+
+Sep. 10 03:36
+I spent hours on the "encryption", but did nothing.
+
+This is because of a lack of overview of the "encryption" function.
+
+Look top-down is a better way to finish it, which gives me an 
+
+MARCO view of what I should do in this project.
+
+In the order: main.c -> rsa.c/ rsa.h.
+
+Another thing, keep an eye on the rsa_ functions and how to safely 
+
+use mpz_ fucntions.
+
+Sep. 26
+The best way to write a program: top-down.

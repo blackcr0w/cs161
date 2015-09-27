@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+#include <stdint.h>
+#include <string.h>
 #include <gmp.h>
 
 #include "rsa.h"
@@ -190,6 +191,28 @@ void rsa_decrypt(mpz_t m, const mpz_t c, const struct rsa_key *key)
 static void generate_prime(mpz_t p, unsigned int numbits)
 {
 	/* TODO */
+	// jk: think about the error cases and call abort()
+	// jk: modify rand_array using uint8_t
+	uint8_t *rand_array = (uint8_t *)malloc(sizeof(uint8_t)*((numbits / 8) + 1));
+	FILE* furand = fopen("/dev/urandom", "r");
+	 while (1) {
+		fread(rand_array, 1, numbits / 8, furand);
+		*(rand_array + (numbits / 8)) = '\0';
+		// fscanf(furand, "%s", rand_array);
+		//fprintf(stdout, "retult of fscanf: %s\n", rand_array);
+		char b = rand_array[0];
+		b = b | 0xc0;
+		rand_array[0] = b;
+		mpz_import(p, (numbits / 8), 1, 1, 0, 0, rand_array);
+		// fprintf(stdout, "%s\n", "here 1");
+		// mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
+		if (mpz_probab_prime_p (p, 25) != 0) 
+			break;
+	}
+	// fprintf(stdout, "%s\n", "here 2");
+	// gmp_printf("prime is: %Zd\n", p);
+	free(rand_array);
+	fclose(furand);
 }
 
 /* Generate an RSA key. The base-2 logarithm of the modulus n will lie in the
@@ -197,4 +220,33 @@ static void generate_prime(mpz_t p, unsigned int numbits)
 void rsa_genkey(struct rsa_key *key, unsigned int numbits)
 {
 	/* TODO */
+	if (!(numbits % 16 == 0))
+		abort();
+	mpz_t one, p, q, pm1qm1, pm1, qm1;
+	mpz_init(one);
+	mpz_init(p);
+	mpz_init(q);
+	mpz_init(pm1);
+	mpz_init(qm1);
+	mpz_init(pm1qm1);
+
+	generate_prime(p, numbits / 2);
+	// gmp_printf("p = %Zd\n", p);
+	// gmp_printf("q = %Zd\n", q);
+	generate_prime(q, numbits / 2);
+	mpz_set_str(key->e, "65537", 10);
+	mpz_set_str(one, "1", 10);
+
+	mpz_sub (pm1, p, one);
+	mpz_sub (qm1, q, one);
+	mpz_mul(pm1qm1, pm1, qm1);
+	mpz_mul(key->n, p, q);
+	mpz_invert (key->d, key->e, pm1qm1);
+	// gmp_printf("p = %Zd\n q = %Zd n = %Zd\n", p, q, pm1qm1);
+	mpz_clear(one);
+	mpz_clear(p);
+	mpz_clear(q);
+	mpz_clear(pm1);
+	mpz_clear(qm1);
+	mpz_clear(pm1qm1);
 }
