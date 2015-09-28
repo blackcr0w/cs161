@@ -1,0 +1,11 @@
+1. It can not decrypt the same message we encrypted. 
+It happens because if m is bigger than n, when decrypt the message, m^ed % n = m % n, but m is bigger 
+than n, so the final answer should be other numbers instead of m, which leads to a different message 
+other than m. 
+Cyptosystems uses hash functions(MD5, SHA-1, SHA-2 SHA-3, etc) to deal with large documents which m > n.
+
+2. The ciphertexts are exactly the same. 
+In this way, every time you send the same message, the attacker would be easier to guess your plaintexts.
+Under the case that I only want to encrypt one of two messages:"0" or "1“(boolean), if the key stays the same, 
+the attacker doesn't even have to know what the key is but only intercepting the ciphertext for several times and 
+analysing the ciphertext, and then they are albe to figure out what the plaintext is. 
