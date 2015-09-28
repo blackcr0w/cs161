@@ -19,11 +19,10 @@ static int usage(FILE *fp)
 /* Encode the string s into an integer and store it in x. We're assuming that s
  * does not have any leading \x00 bytes (otherwise we would have to encode how
  * many leading zeros there are). */
-// jk: do not understand this part
+
 static void encode(mpz_t x, const char *s)
 {
 	mpz_import(x, strlen(s), 1, 1, 0, 0, s);
-	//mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
 }
 
 /* Decode the integer x into a NUL-terminated string and return the string. The
@@ -57,11 +56,12 @@ static char *decode(const mpz_t x, size_t *len)
  *
  * The return value is the exit code of the program as a whole: nonzero if there
  * was an error; zero otherwise. */
-// jk: use message to store the encrypted msg
-// print the encrypted info here?
-// how to do with the error case?
-// how to judge private and public?
-// remember: both pub and priv key can be used for encrypt
+
+/* Encrypt strings to get integer ciphertexts.
+ *
+ * Use message to store the encrypted msg.
+ *
+ * Both pub and priv key can be used for encrypt. */
 static int encrypt_mode(const char *key_filename, const char *message)
 {
 	/* TODO */
@@ -84,7 +84,7 @@ static int encrypt_mode(const char *key_filename, const char *message)
     		rsa_key_load_public(key_filename, &new_key);
     }
 
-    else  // jk: should re-consider this part, and the declaration of .priv
+    else  
     	rsa_key_load_private(key_filename, &new_key);
 
 
@@ -109,6 +109,8 @@ static int encrypt_mode(const char *key_filename, const char *message)
  *
  * The return value is the exit code of the program as a whole: nonzero if there
  * was an error; zero otherwise. */
+
+ /* decrypt integer ciphertexts to get strings. */
 static int decrypt_mode(const char *key_filename, const char *c_str)
 {
 	/* TODO */
@@ -116,8 +118,8 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
 	rsa_key_init(&priv_key);
 	const char *priv_key_file = ".priv";
     char *ret;	
-    /* First, check whether the key_filename is .priv */
-    ret = strstr(key_filename, priv_key_file);
+    
+    ret = strstr(key_filename, priv_key_file);  
     if (ret == NULL) {
     	fprintf(stderr, "%s\n", "ERROR: Must use .priv to decrypt.");
     	rsa_key_clear(&priv_key);
@@ -132,24 +134,16 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
 	char *c_str_edti = (char *)malloc(strlen(c_str));
 	strcpy(c_str_edti, c_str);
 	strtok(c_str_edti, "\n");
-    // jk: convert c_str to mpz_t
-/*    size_t ln = strlen(c_str_edti) - 1;
-	if (c_str_edti[ln] == '\n')
-	    c_str_edti[ln] = '\0';*/
+ 
+
     mpz_set_str(msg_encrypted, c_str_edti, 10);
 
-/*    FILE* fout = fopen("./out", "w");
-	fprintf(fout, "%s\n", c_str_edti);
-	fclose(fout);*/
 
     rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);  
 
     char *msg_decoded = decode(msg_decrypted, NULL);
 
-/*    FILE* fout1 = fopen("./out1", "w");
-	fprintf(fout1, "%s\n", msg_decoded);
-	fclose(fout1);
-*/
+
 	fprintf(stdout, "%s", msg_decoded);
 	mpz_clear(msg_decrypted);
 	mpz_clear(msg_encrypted);
@@ -165,10 +159,13 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
  *
  * The return value is the exit code of the program as a whole: nonzero if there
  * was an error; zero otherwise. */
+
+ /* Output the key generated print the error return value 
+  * 
+  * Return 1 if result is invalid, else return 0. */
 static int genkey_mode(const char *numbits_str)
 {
 	/* TODO */
-	// jk: print the error return value
 	unsigned int numbits;
 	struct rsa_key key;
 
@@ -190,21 +187,6 @@ static int genkey_mode(const char *numbits_str)
 int main(int argc, char *argv[])
 {
 
-/*	mpz_t a, b, c;
-	mpz_init(a);
-	mpz_init(b);
-	mpz_init(c);
-	mpz_set_str(a, "112233445566778899", 10);
-	mpz_set_str(b, "998877665544332211", 10);
-
-	mpz_mul(c, a, b);
-	gmp_printf("%Zd = %Zd * %Zd\n", c, a, b);
-	mpz_clear(a);
-	mpz_clear(b);
-	mpz_clear(c);
-
-	gmp_printf("%Zd\n", message_encode("test"));
-*/
 
 	const char *command;
 
