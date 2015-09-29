@@ -125,7 +125,7 @@ static int rsa_key_load(const char *filename, struct rsa_key *key)
 	int rc;
 
 	fp = fopen(filename, "rb");
-	if (fp == NULL)
+	if (fp == NULL || errno)
 		return -1;
 	rc = rsa_key_read(fp, key);
 	if (rc != 0) {
@@ -195,10 +195,18 @@ void rsa_decrypt(mpz_t m, const mpz_t c, const struct rsa_key *key)
 /* Generate two prime numbers using /dev/urandom. */
 static void generate_prime(mpz_t p, unsigned int numbits)
 {
+	if (!(numbits % 8 == 0))
+		abort();
 	uint8_t *rand_array = (uint8_t *)malloc(sizeof(uint8_t)*((numbits / 8) + 1));
 	FILE* furand = fopen("/dev/urandom", "r");
+	if (furand == NULL || errno) {
+		free(rand_array);
+		abort();
+	}
 	 while (1) {
-		fread(rand_array, 1, numbits / 8, furand);
+		size_t ret = fread(rand_array, 1, numbits / 8, furand);
+		if (errno || ret != (numbits / 8))
+			abort();
 		*(rand_array + (numbits / 8)) = '\0';
 		
 		char b = rand_array[0];

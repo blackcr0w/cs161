@@ -142,7 +142,11 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
     rsa_decrypt(msg_decrypted, msg_encrypted, &priv_key);  
 
     char *msg_decoded = decode(msg_decrypted, NULL);
-
+   if (msg_decoded == NULL) {
+    	free(msg_decoded);
+		free(c_str_edti);
+		return 1;
+    }
 
 	fprintf(stdout, "%s", msg_decoded);
 	mpz_clear(msg_decrypted);
@@ -174,10 +178,16 @@ static int genkey_mode(const char *numbits_str)
 	strcpy(numbits_str_edit, numbits_str);
 	strtok(numbits_str_edit, "\n");
 	numbits = (unsigned int)strtoul(numbits_str_edit, NULL, 10);
+	if (!(numbits % 16 == 0)) {
+		free(numbits_str_edit);
+		return 1;
+	}
 	rsa_genkey(&key, numbits);
 
-	if (rsa_key_write(stdout, &key) < 0)
+	if (rsa_key_write(stdout, &key) < 0) {
+		free(numbits_str_edit);
 		return 1;
+	}
 
 	rsa_key_clear(&key);
 	free(numbits_str_edit);
