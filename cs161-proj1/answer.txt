@@ -1,6 +1,0 @@
-1. It can not decrypt the same message we encrypted. 
-It happens because if m is bigger than n, when decrypt the message, m^ed % n = m % n, but m is bigger than n, so the final answer should be other numbers instead of m, which leads to a different message other than m. 
-Cyptosystems uses hash functions(MD5, SHA-1, SHA-2 SHA-3, etc) to deal with large documents  which m > n.
-
-2. The cipher texts are exactly the same. 
-In this way, every time you send the same message, the m^d stays the same. Under the case that only encrypting one of two messages:"0" or "1“(boolean), if the key stays the same, the attacker could get to know m^e(mod n) of “1” and “0”. Since n,d,m,m^e are known, then the attacker can somehow calculate out e by using discrete logarithm. In this way, the attacker can figure out private key by using the datas he intercepted. And thus being able to see what messages the sender is sending, and pretends to be the sender and sends out different messages to the other person.

@@ -1,9 +1,8 @@
-#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <errno.h>
 #include "rsa.h"
 
 static int usage(FILE *fp)
@@ -76,7 +75,6 @@ static int encrypt_mode(const char *key_filename, const char *message)
     if (ret == NULL) {
     	ret = strstr(key_filename, pub_key);
     	if (ret == NULL) {
-    		fprintf(stderr, "%s\n", "ERROR: \"filename\" do not match any key file.");
     		rsa_key_clear(&new_key);
     		return 1;
     	}
@@ -93,6 +91,15 @@ static int encrypt_mode(const char *key_filename, const char *message)
 	mpz_init(msg_encrypted);
 
 	encode(msg_encoded, message);
+	size_t encode_len = mpz_sizeinbase(msg_encoded, 2);
+	size_t key_len = mpz_sizeinbase(new_key.n, 2);
+
+	if (encode_len > key_len) {
+		mpz_clear(msg_encoded);
+		mpz_clear(msg_encrypted);
+		rsa_key_clear(&new_key);
+		return 1;
+	}
 
 	rsa_encrypt(msg_encrypted, msg_encoded, &new_key);
 
@@ -121,7 +128,6 @@ static int decrypt_mode(const char *key_filename, const char *c_str)
     
     ret = strstr(key_filename, priv_key_file);  
     if (ret == NULL) {
-    	fprintf(stderr, "%s\n", "ERROR: Must use .priv to decrypt.");
     	rsa_key_clear(&priv_key);
     	return 1;
     }

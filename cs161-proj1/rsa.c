@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <gmp.h>
-
+#include <errno.h>
 #include "rsa.h"
 
 /* Initialize a struct rsa_key. You need to do this before calling any other
