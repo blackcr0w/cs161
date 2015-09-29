@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <errno.h>
 #include <gmp.h>
 
 /* Represents an RSA private or public key. If the d member is nonzero, then the
