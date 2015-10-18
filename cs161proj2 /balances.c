@@ -19,11 +19,11 @@ const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the has
 	0x51, 0x0d, 0x40, 0x9d, 0x6c, 0xca, 0x89, 0x2e, 0xd1, 0xc7, 0x51, 0x98, 0xe0, 0x4b, 0xde, 0xec,
 };
 
-struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier
+typedef struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier
 	struct blockchain_node *parent;
 	struct block b;
 	int is_valid;
-};
+} bc_node;
 
 /* A simple linked list to keep track of account balances. */
 struct balance {
@@ -73,14 +73,14 @@ sort the blocks -->  using height, the distance from the root block
 check validity of blocks*/
 int main(int argc, char *argv[])
 {
-	int i;
+	int i, j;
 
 	/* Read input block files. */
-	struct blockchain_node *curr_node; // jk: used to store blocks in memory
-	memset(curr_node, 0, sizeof(*curr_node);
-	curr_node->parent = NULL;
-	curr_node->is_valid = 0;
-
+	bc_node *node_list = (bc_node *)malloc(sizeof(bc_node));
+	bc_node *node_ptr = node_list;
+	int list_len = 1;
+	FILE *fp;
+	fp = fopen("block2.out", "a");
 	for (i = 1; i < argc; i++) {
 		char *filename;
 		struct block b;
@@ -92,13 +92,42 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "could not read %s\n", filename);
 			exit(1);
 		}
-		curr_node->parent = 
+		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));
+		curr_node->parent = NULL;
+		curr_node->b = b;
+		curr_node->is_valid = 0;  // jk: init to be non-valid
 
+		// jk: realloc the node_list
+		list_len++;
+		realloc(node_list, list_len * sizeof(bc_node));
+		node_ptr = curr_node;
+		block_print(&(node_ptr->b), fp);
+		node_ptr++;
+
+		// printf("height: %u\n", b.height);
+		// printf("nonce: %u\n", b.nonce);
+		// block_print(&b, fp);
+		// hash_output curr_hash;
+		// block_hash(&b, curr_hash);
+		// printf("hash or curr block: %s\n", curr_hash);
+		// printf("hash of previous block: %s\n", b.prev_block_hash);
 
 
 		/* TODO */
 		/* Feel free to add/modify/delete any code you need to. */
 	}
+	node_ptr = NULL;
+	for (i = 0; i < list_len - 1; i++) {
+		bc_node *curr_node = node_list[i];
+		hash_output prev_hash = curr_node->b.prev_block_hash;
+		for (j = 0; j < list_len - 1; j++) {
+			bc_node *find_node = node_list[j];
+			hash_output h;
+			block_hash(find_node0->b, h);
+			strcmp()
+		}
+	}
+	fclose(fp);
 
 	/* Organize into a tree, check validity, and output balances. */
 	/* TODO */
