@@ -6,6 +6,8 @@ gmp-6.0.0/
 *.ko
 *.obj
 *.elf
+balances
+genkey
 #
 # # Precompiled Headers
 # *.gch

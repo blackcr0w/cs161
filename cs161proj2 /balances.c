@@ -14,12 +14,12 @@
  * chain of the longest length, chooses one arbitrarily. */
 
 /* If a block has height 0, it must have this specific hash. */
-const hash_output GENESIS_BLOCK_HASH = {
+const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the hash of block
 	0x00, 0x00, 0x00, 0x0e, 0x5a, 0xc9, 0x8c, 0x78, 0x98, 0x00, 0x70, 0x2a, 0xd2, 0xa6, 0xf3, 0xca,
 	0x51, 0x0d, 0x40, 0x9d, 0x6c, 0xca, 0x89, 0x2e, 0xd1, 0xc7, 0x51, 0x98, 0xe0, 0x4b, 0xde, 0xec,
 };
 
-struct blockchain_node {
+struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier
 	struct blockchain_node *parent;
 	struct block b;
 	int is_valid;
@@ -27,9 +27,9 @@ struct blockchain_node {
 
 /* A simple linked list to keep track of account balances. */
 struct balance {
-	struct ecdsa_pubkey pubkey;
-	int balance;
-	struct balance *next;
+	struct ecdsa_pubkey pubkey;  // jk: claims the owner of balance
+	int balance;  // the amount of money
+	struct balance *next;  // pointes to the next balance
 };
 
 /* Add or subtract an amount from a linked list of balances. Call it like this:
@@ -66,11 +66,21 @@ static struct balance *balance_add(struct balance *balances,
 	return p;
 }
 
+/*jk: 
+TODO: get the main chain
+read block from file, put into blockchain_node
+sort the blocks -->  using height, the distance from the root block
+check validity of blocks*/
 int main(int argc, char *argv[])
 {
 	int i;
 
 	/* Read input block files. */
+	struct blockchain_node *curr_node; // jk: used to store blocks in memory
+	memset(curr_node, 0, sizeof(*curr_node);
+	curr_node->parent = NULL;
+	curr_node->is_valid = 0;
+
 	for (i = 1; i < argc; i++) {
 		char *filename;
 		struct block b;
@@ -82,6 +92,9 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "could not read %s\n", filename);
 			exit(1);
 		}
+		curr_node->parent = 
+
+
 
 		/* TODO */
 		/* Feel free to add/modify/delete any code you need to. */

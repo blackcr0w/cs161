@@ -24,24 +24,24 @@ struct block {
 	hash_output prev_block_hash;
 	uint32_t height;
 	uint32_t nonce;
-	struct transaction reward_tx;
+	struct transaction reward_tx;  // the height of both txns must be the same as block
 	struct transaction normal_tx;
 };
 
-void block_init(struct block *b, const struct block *parent);
+void block_init(struct block *b, const struct block *parent);  // used to init a block, used in step 2
 
-void block_hash(const struct block *b, hash_output h);
+void block_hash(const struct block *b, hash_output h);  // jk: used to check the validity of block
 
-void block_mine(struct block *b);
+void block_mine(struct block *b);  // used in step 2
 
-void block_print(const struct block *b, FILE *fp);
+void block_print(const struct block *b, FILE *fp);  /* Print a human-readable representation of the block to fp. */
 
-int block_read(struct block *b, FILE *fp);
+int block_read(struct block *b, FILE *fp);  // jk: not used
 
 int block_read_filename(struct block *b, const char *filename);
 
 int block_write(const struct block *b, FILE *fp);
 
-int block_write_filename(const struct block *b, const char *filename);
+int block_write_filename(const struct block *b, const char *filename);  // used in step 2
 
 #endif

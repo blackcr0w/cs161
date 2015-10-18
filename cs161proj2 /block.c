@@ -40,6 +40,7 @@ static void deserialize(const unsigned char **p, const unsigned char *endp,
 }
 
 /* Serialize a block into a flat array (for hashing or writing to a file). */
+// not used in outsied world
 static void block_serialize(const struct block *b, unsigned char buf[SERIALIZED_BLOCK_LEN])
 {
 	unsigned char *p, *endp;
@@ -133,7 +134,7 @@ void block_hash(const struct block *b, hash_output h)
 
 /* Mine a block. Increment the nonce until the block's hash output satisfies
  * TARGET_HASH. */
-void block_mine(struct block *b)
+void block_mine(struct block *b)  // jk: used in step 2
 {
 	/* TODO */
 }

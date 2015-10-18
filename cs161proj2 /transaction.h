@@ -10,6 +10,7 @@
 /* This represents an (x, y) coordinate on an elliptic curve. A public key is
  * not allowed to be the point at infinity, so we don't have to encode that
  * possibility. */
+// jk: public key is used by other accounts to varify the identity of an owner
 struct ecdsa_pubkey {
 	unsigned char x[32];
 	unsigned char y[32];
@@ -17,6 +18,7 @@ struct ecdsa_pubkey {
 
 /* An ECDSA signature. In the elliptic curve group we use, scalar multipliers
  * are 256-bit integers. */
+// jk: signature is like the private key?
 struct ecdsa_signature {
 	unsigned char r[32];
 	unsigned char s[32];
@@ -26,11 +28,13 @@ struct ecdsa_signature {
  * a reward transaction, creates a coin out of thin air and sends it to a public
  * key). In a normal transaction, prev_transaction_hash==0 means that there is
  * not transaction. */
+// jk: public key <==> another account 
+// transaction contains: 
 struct transaction {
 	uint32_t height;
-	hash_output prev_transaction_hash;
-	struct ecdsa_pubkey dest_pubkey;
-	struct ecdsa_signature src_signature;
+	hash_output prev_transaction_hash;  // used to identify old txns liking to this new txn
+	struct ecdsa_pubkey dest_pubkey;  // the new owner
+	struct ecdsa_signature src_signature;  // old owner's private key
 };
 
 void transaction_hash(const struct transaction *tx, hash_output h);
