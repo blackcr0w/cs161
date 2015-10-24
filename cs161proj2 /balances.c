@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <stdbool.h>
 #include <openssl/ec.h>
 
 #include "block.h"
@@ -13,6 +13,7 @@
  * their balance in the longest chain of blocks. In case there is more than one
  * chain of the longest length, chooses one arbitrarily. */
 
+
 /* If a block has height 0, it must have this specific hash. */
 const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the hash of block
 	0x00, 0x00, 0x00, 0x0e, 0x5a, 0xc9, 0x8c, 0x78, 0x98, 0x00, 0x70, 0x2a, 0xd2, 0xa6, 0xf3, 0xca,
@@ -21,10 +22,11 @@ const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the has
 
 typedef struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier
 	struct blockchain_node *parent;
+	struct blockchain_node *child;
 	struct block *b;
 	int is_valid;
+	hash_output curr_hash;
 	struct blockchain_node *next;  // using a double linked list to store all block nodes
-	struct blockchain_node *prev;
 } bc_node;
 
 /* A simple linked list to keep track of account balances. */
@@ -33,6 +35,7 @@ struct balance {
 	int balance;  // the amount of money
 	struct balance *next;  // pointes to the next balance
 };
+
 
 /* Add or subtract an amount from a linked list of balances. Call it like this:
  *   struct balance *balances = NULL;
@@ -68,8 +71,32 @@ static struct balance *balance_add(struct balance *balances,
 	return p;
 }
 
+bool compare_hash(hash_output parent, hash_output child)
+{
+	int i;
+    for (i = 0; i < 32; i++)
+        if (parent[i] != child[i])
+            return false;
+    return true;
+}
+
+bc_node* search_hash(hash_output src_hash, bc_node *block_list)
+{
+	if (block_list == NULL) 
+		printf("%s\n", "NUll pointer in search_hash");
+	bc_node *ptr = block_list;
+	while (ptr != NULL) {
+		if (compare_hash(ptr->curr_hash, src_hash))
+			return ptr;
+		else 
+			ptr = ptr->next;
+	}
+	printf("%s\n", "ERROR: There is no block with the this hash.");
+	return ptr;
+}
+
 // using selection sort
-void sort_block_chain(bc_node *block_list) 
+/*void sort_block_chain(bc_node *block_list) 
 {
 	if (block_list == NULL) {
 		printf("%s\n", "NUll pointer in sort_block_chain\n");
@@ -89,7 +116,7 @@ void sort_block_chain(bc_node *block_list)
 				curr_node->prev = ptr;
 				//curr_node = ptr;
 				i++;
-				break;
+				continue;
 			}
 			else { 
 				ptr = ptr->next;
@@ -99,7 +126,7 @@ void sort_block_chain(bc_node *block_list)
 		}
 		return;
 	}
-}
+}*/
 
 /*jk: 
 TODO: get the main chain
@@ -134,21 +161,34 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "could not read %s\n", filename);
 			exit(1);
 		}
+
 		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));
 		curr_node->b = &curr_block;
+		block_hash(&curr_block, curr_node->curr_hash);
 		curr_node->parent = NULL;
 		curr_node->is_valid = 0;
 		block_ptr->next = curr_node;
-		curr_node->prev = block_ptr;
 		curr_node->next = NULL;
 		block_ptr = curr_node;
+		
 		// sort this list
 		// from height 0, check the prev block of every block,
 		// put them in a tree
 	}
 	block_ptr = block_list;
 	// jk: sort the block using height:
-	sort_block_chain(block_list);
+	//sort_block_chain(block_list);
+
+	while (block_ptr != NULL) {
+		if (!block_ptr->b->height) {
+			continue;
+		}
+		bc_node *parent = search_hash(block_ptr->b->prev_block_hash, block_list);
+		parent->child = block_ptr;
+		block_ptr->parent = parent;
+		block_ptr = block_ptr->next;
+	}
+
 
 
 		// bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));
