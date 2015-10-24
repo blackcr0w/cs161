@@ -86,6 +86,7 @@ bc_node* search_hash(hash_output src_hash, bc_node *block_list)
 		printf("%s\n", "NUll pointer in search_hash");
 	bc_node *ptr = block_list;
 	while (ptr != NULL) {
+		printf("%s\n", "in search_hash");
 		if (compare_hash(ptr->curr_hash, src_hash))
 			return ptr;
 		else 
@@ -136,24 +137,29 @@ check validity of blocks*/
 int main(int argc, char *argv[])
 {
 	int i;
-
 	/* Read input block files. */
 	// bc_node *node_list = (bc_node *)malloc(sizeof(bc_node));
 	// bc_node *node_ptr = node_list;
 	// int list_len = 1;
-	// FILE *fp;
-	// fp = fopen("block2.out", "a");
+
 	bc_node *block_list = (bc_node *)malloc(sizeof(bc_node));  // block_list is empty head
 	bc_node *block_ptr = block_list;
 	block_list->parent = NULL;
+	block_list->child = NULL;
 	block_list->b = NULL;
+	// block_list->curr_hash = 0;  // do not know how to init hash
 	block_list->is_valid = 0;
 	block_list->next = NULL; 
+	printf("%s\n", "here 1");
 
+	FILE *fp;
+	fp = fopen("blockprint.out", "a");
 	for (i = 1; i < argc; i++) {
+		
 		char *filename;
 		struct block curr_block;
 		int rc;
+		printf("%s\n", "here 2");
 
 		filename = argv[i];
 		rc = block_read_filename(&curr_block, filename);
@@ -162,27 +168,30 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
+		block_print(&curr_block, fp);  // jk: print curr block to output file
 		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));
-		curr_node->b = &curr_block;
-		block_hash(&curr_block, curr_node->curr_hash);
 		curr_node->parent = NULL;
+		curr_node->child = NULL;
+		curr_node->b = &curr_block;
 		curr_node->is_valid = 0;
+		block_hash(&curr_block, curr_node->curr_hash);
+		printf("%s\n", "here 4");
+		
 		block_ptr->next = curr_node;
 		curr_node->next = NULL;
 		block_ptr = curr_node;
-		
 		// sort this list
 		// from height 0, check the prev block of every block,
 		// put them in a tree
 	}
-	block_ptr = block_list;
-	// jk: sort the block using height:
-	//sort_block_chain(block_list);
-
+	block_ptr = block_list->next;
+	printf("%s\n", "here 5");
+	printf("%p\n", block_ptr);
 	while (block_ptr != NULL) {
 		if (!block_ptr->b->height) {
 			continue;
 		}
+		printf("%s\n", "in the main");
 		bc_node *parent = search_hash(block_ptr->b->prev_block_hash, block_list);
 		parent->child = block_ptr;
 		block_ptr->parent = parent;
