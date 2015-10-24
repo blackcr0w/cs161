@@ -80,6 +80,25 @@ bool compare_hash(hash_output parent, hash_output child)
     return true;
 }
 
+bool search_txn_hash(bc_node *curr_node, hash_output prev_transaction)
+{
+	bc_node *ptr = curr_node;
+	if (ptr == NULL)
+		printf("%s\n", "ERROR: Passing NULL pointer to search_txn_hash");
+	ptr = ptr->parent;
+	hash_output h_rtx;
+	hash_output h_ntx;
+	transaction_hash(&(ptr->b->reward_tx), h_rtx);
+	transaction_hash(&(ptr->b->reward_tx), h_ntx);
+	while(ptr != NULL) {
+		if (byte32_cmp(h_rtx, prev_transaction)
+			|| byte32_cmp(h_ntx, prev_transaction))
+			return true;
+		ptr = ptr->parent;
+	}
+	return false;
+}
+
 bc_node* search_hash(hash_output src_hash, bc_node *block_list)
 {
 	if (block_list == NULL) 
@@ -87,13 +106,73 @@ bc_node* search_hash(hash_output src_hash, bc_node *block_list)
 	bc_node *ptr = block_list;
 	while (ptr != NULL) {
 		printf("%s\n", "in search_hash");
-		if (compare_hash(ptr->curr_hash, src_hash))
+		if (byte32_cmp(ptr->curr_hash, src_hash))
 			return ptr;
 		else 
 			ptr = ptr->next;
 	}
 	printf("%s\n", "ERROR: There is no block with the this hash.");
 	return ptr;
+}
+
+void check_validity(bc_node *block_ptr)
+{
+	if (block_ptr == NULL) {
+		printf("%s\n", "Passinng NULL pointer in check_validity");
+	}
+ 	while(block_ptr != NULL) {
+ 		int height = block_ptr->b->height;
+		if (height == 0)
+			if (!byte32_cmp(block_ptr->curr_hash, GENESIS_BLOCK_HASH)) {
+				block_ptr->is_valid = 0;
+				block_ptr = block_ptr->next;
+				continue;
+			}
+		if (height >= 1) {
+			if (block_ptr->parent->b->height != height - 1) {
+				block_ptr->is_valid = 0;
+				block_ptr = block_ptr->next;
+				continue;
+			}
+		}
+		if (!hash_output_is_below_target(block_ptr->curr_hash)) {
+			block_ptr->is_valid = 0;
+			block_ptr = block_ptr->next;
+			continue;
+		}
+		if (height != block_ptr->b->reward_tx.height || height != block_ptr->b->normal_tx.height) {
+			block_ptr->is_valid = 0;
+			block_ptr = block_ptr->next;
+			continue;
+		}
+		if (!byte32_is_zero(block_ptr->b->reward_tx.prev_transaction_hash)
+			|| !byte32_is_zero(block_ptr->b->reward_tx.src_signature.r)
+			|| !byte32_is_zero(block_ptr->b->reward_tx.src_signature.s)) {
+			block_ptr->is_valid = 0;
+			block_ptr = block_ptr->next;
+			continue;
+		}
+		if (!byte32_is_zero(block_ptr->b->normal_tx.prev_transaction_hash)) {
+			if (!search_txn_hash(block_ptr, block_ptr->b->normal_tx.prev_transaction_hash)) {
+				block_ptr->is_valid = 0;
+				block_ptr = block_ptr->next;
+				continue;				
+			}
+			if (!transaction_verify(&(block_ptr->b->normal_tx), &(block_ptr->parent->b->normal_tx))
+			|| !transaction_verify(&(block_ptr->b->normal_tx), &(block_ptr->parent->b->reward_tx))) {
+				block_ptr->is_valid = 0;
+				block_ptr = block_ptr->next;
+				continue;
+			}
+			if (search_txn_hash(block_ptr, block_ptr->b->normal_tx.prev_transaction_hash)) {
+				block_ptr->is_valid = 0;
+				block_ptr = block_ptr->next;
+				continue;
+			}
+		}
+		
+	}
+
 }
 
 // using selection sort
@@ -148,7 +227,7 @@ int main(int argc, char *argv[])
 	block_list->child = NULL;
 	block_list->b = NULL;
 	// block_list->curr_hash = 0;  // do not know how to init hash
-	block_list->is_valid = 0;
+	block_list->is_valid = 1;
 	block_list->next = NULL; 
 	printf("%s\n", "here 1");
 
@@ -197,6 +276,9 @@ int main(int argc, char *argv[])
 		block_ptr->parent = parent;
 		block_ptr = block_ptr->next;
 	}
+
+	check_validity(block_list->next);
+
 
 
 
