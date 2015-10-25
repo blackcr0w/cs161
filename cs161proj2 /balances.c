@@ -7,6 +7,7 @@
 #include "block.h"
 #include "common.h"
 #include "transaction.h"
+#include "steal.h"
 
 /* Usage: ./balances *.blk
  * Reads in a list of block files and outputs a table of public key hashes and
@@ -19,6 +20,9 @@ const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the has
 	0x00, 0x00, 0x00, 0x0e, 0x5a, 0xc9, 0x8c, 0x78, 0x98, 0x00, 0x70, 0x2a, 0xd2, 0xa6, 0xf3, 0xca,
 	0x51, 0x0d, 0x40, 0x9d, 0x6c, 0xca, 0x89, 0x2e, 0xd1, 0xc7, 0x51, 0x98, 0xe0, 0x4b, 0xde, 0xec,
 };
+/*TODO: 
+ *1. child in bc_node is not necessary. 
+ */
 
 typedef struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier
 	struct blockchain_node *parent;
@@ -77,6 +81,40 @@ static struct balance *balance_add(struct balance *balances,
 	return p;
 }
 
+/*jk: search hash in block_list, used in organize_tree*/
+bc_node* search_hash(hash_output src_hash, bc_node *block_list)
+{
+	if (block_list == NULL) 
+		printf("%s\n", "NUll pointer in search_hash");
+	bc_node *ptr = block_list;
+	while (ptr != NULL) {
+		if (byte32_cmp(ptr->curr_hash, src_hash))
+			return ptr;
+		else 
+			ptr = ptr->next;
+	}
+	printf("%s\n", "ERROR: There is no block with the this hash.");
+	return ptr;
+}
+
+/*jk: organize block_list in a tree structure
+ *block_ptr: first non-empty node in the list*/
+void organize_tree(bc_node *block_ptr)
+{
+	if (ptr == NULL)
+		printf("%s\n", "ERROR: Passing NULL pointer to organize_tree");
+	bc_node *ptr = block_ptr;
+	while (ptr != NULL) {
+		if (!ptr->b->height) {
+			continue;
+		}
+		bc_node *parent = search_hash(ptr->b->prev_block_hash, block_ptr);
+		parent->child = ptr;
+		ptr->parent = parent;
+		ptr = ptr->next;
+	}
+}
+
 bool compare_hash(hash_output parent, hash_output child)
 {
 	int i;
@@ -106,88 +144,81 @@ bool search_txn_hash(bc_node *curr_node, hash_output prev_transaction)
 	return false;
 }
 
-bc_node* search_hash(hash_output src_hash, bc_node *block_list)
-{
-	if (block_list == NULL) 
-		printf("%s\n", "NUll pointer in search_hash");
-	bc_node *ptr = block_list;
-	while (ptr != NULL) {
-		printf("%s\n", "in search_hash");
-		if (byte32_cmp(ptr->curr_hash, src_hash))
-			return ptr;
-		else 
-			ptr = ptr->next;
-	}
-	printf("%s\n", "ERROR: There is no block with the this hash.");
-	return ptr;
-}
-
+/*jk: check the validity of every block in block_list
+ *block_ptr: the first non-empty block node in the list
+ *if one of these if-statements do not satisfy, we are sure this is not valid
+ */
 void check_validity(bc_node *block_ptr)
 {
 	if (block_ptr == NULL) {
 		printf("%s\n", "Passinng NULL pointer in check_validity");
 	}
- 	while(block_ptr != NULL) {
- 		int height = block_ptr->b->height;
+	bc_ndoe *ptr = block_ptr;
+ 	while(ptr != NULL) {
+ 		int height = ptr->b->height;
 		if (height == 0)
-			if (!byte32_cmp(block_ptr->curr_hash, GENESIS_BLOCK_HASH)) {
-				block_ptr->is_valid = 0;
-				block_ptr = block_ptr->next;
+			if (!byte32_cmp(ptr->curr_hash, GENESIS_BLOCK_HASH)) {
+				ptr->is_valid = 0;
+				ptr = ptr->next;
 				continue;
 			}
 		if (height >= 1) {
-			if (block_ptr->parent->b->height != height - 1) {
-				block_ptr->is_valid = 0;
-				block_ptr = block_ptr->next;
+			if (ptr->parent->b->height != height - 1) {
+				ptr->is_valid = 0;
+				ptr = ptr->next;
 				continue;
 			}
 		}
-		if (!hash_output_is_below_target(block_ptr->curr_hash)) {
-			block_ptr->is_valid = 0;
-			block_ptr = block_ptr->next;
+		if (!hash_output_is_below_target(ptr->curr_hash)) {
+			ptr->is_valid = 0;
+			ptr = ptr->next;
 			continue;
 		}
-		if (height != block_ptr->b->reward_tx.height || height != block_ptr->b->normal_tx.height) {
-			block_ptr->is_valid = 0;
-			block_ptr = block_ptr->next;
+		/*************BELOW IS NOT CHECKED YET*********************************/
+		if (height != ptr->b->reward_tx.height || height != ptr->b->normal_tx.height) {
+			ptr->is_valid = 0;
+			ptr = ptr->next;
 			continue;
 		}
-		if (!byte32_is_zero(block_ptr->b->reward_tx.prev_transaction_hash)
-			|| !byte32_is_zero(block_ptr->b->reward_tx.src_signature.r)
-			|| !byte32_is_zero(block_ptr->b->reward_tx.src_signature.s)) {
-			block_ptr->is_valid = 0;
-			block_ptr = block_ptr->next;
+		if (!byte32_is_zero(ptr->b->reward_tx.prev_transaction_hash)
+			|| !byte32_is_zero(ptr->b->reward_tx.src_signature.r)
+			|| !byte32_is_zero(ptr->b->reward_tx.src_signature.s)) {
+			ptr->is_valid = 0;
+			ptr = ptr->next;
 			continue;
 		}
-		if (!byte32_is_zero(block_ptr->b->normal_tx.prev_transaction_hash)) {
-			if (!search_txn_hash(block_ptr, block_ptr->b->normal_tx.prev_transaction_hash)) {
-				block_ptr->is_valid = 0;
-				block_ptr = block_ptr->next;
+		if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
+			if (!search_txn_hash(ptr, ptr->b->normal_tx.prev_transaction_hash)) {
+				ptr->is_valid = 0;
+				ptr = ptr->next;
 				continue;				
 			}
-			if (!transaction_verify(&(block_ptr->b->normal_tx), &(block_ptr->parent->b->normal_tx))
-			|| !transaction_verify(&(block_ptr->b->normal_tx), &(block_ptr->parent->b->reward_tx))) {
-				block_ptr->is_valid = 0;
-				block_ptr = block_ptr->next;
+			if (!transaction_verify(&(ptr->b->normal_tx), &(ptr->parent->b->normal_tx))
+			|| !transaction_verify(&(ptr->b->normal_tx), &(ptr->parent->b->reward_tx))) {
+				ptr->is_valid = 0;
+				ptr = ptr->next;
 				continue;
 			}
-			if (search_txn_hash(block_ptr, block_ptr->b->normal_tx.prev_transaction_hash)) {
-				block_ptr->is_valid = 0;
-				block_ptr = block_ptr->next;
+			if (search_txn_hash(ptr, ptr->b->normal_tx.prev_transaction_hash)) {
+				ptr->is_valid = 0;
+				ptr = ptr->next;
 				continue;
 			}
 		}
-		block_ptr = block_ptr->next;
+		ptr = ptr->next;
 	}
 
 }
 
+/*jk: find the longest mainchain from the *block_list*
+ *return: the end node of mainchain
+ */
 bc_ndoe* find_mainchain(bc_node *block_ptr)
 {
 	if (block_ptr == NULL) 
 		printf("%s\n", "RROR: Passing NULL pointer to find_mainchain");
 	bc_node *ptr = block_ptr;
-	bc_node *highest_node = ptr;
+	bc_node *highest_node = ptr;  // keep track of the highest valid node
 	while(ptr != NULL) {
 		if (highest_node->b->height < ptr->b->height) {
 			highest_node = ptr;
@@ -321,29 +352,22 @@ check validity of blocks*/
 int main(int argc, char *argv[])
 {
 	int i;
-	/* Read input block files. */
-	// bc_node *node_list = (bc_node *)malloc(sizeof(bc_node));
-	// bc_node *node_ptr = node_list;
-	// int list_len = 1;
-
+	// jk: create block_list head node (an empyt node).
 	bc_node *block_list = (bc_node *)malloc(sizeof(bc_node));  // block_list is empty head
 	bc_node *block_ptr = block_list;
 	block_list->parent = NULL;
 	block_list->child = NULL;
 	block_list->b = NULL;
-	// block_list->curr_hash = 0;  // do not know how to init hash
+	block_list->curr_hash = NULL;
 	block_list->is_valid = 1;
-	block_list->next = NULL; 
-	printf("%s\n", "here 1");
+	block_list->next = NULL;
 
-	FILE *fp;
-	fp = fopen("blockprint.out", "a");
-	for (i = 1; i < argc; i++) {
-		
+	// FILE *fp;
+	// fp = fopen("blockprint.out", "a");
+	for (i = 1; i < argc; i++) {  // jk: read all blocks into block_list
 		char *filename;
 		struct block curr_block;
 		int rc;
-		printf("%s\n", "here 2");
 
 		filename = argv[i];
 		rc = block_read_filename(&curr_block, filename);
@@ -352,40 +376,35 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		block_print(&curr_block, fp);  // jk: print curr block to output file
-		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));
+		// block_print(&curr_block, fp);  // jk: print curr block to output file
+		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));  // jk: REWRITE in *Stack*
 		curr_node->parent = NULL;
 		curr_node->child = NULL;
 		curr_node->b = &curr_block;
 		curr_node->is_valid = 0;
-		block_hash(&curr_block, curr_node->curr_hash);
-		printf("%s\n", "here 4");
-		
+		block_hash(&curr_block, curr_node->curr_hash);		
 		block_ptr->next = curr_node;
 		curr_node->next = NULL;
 		block_ptr = curr_node;
-		// sort this list
 		// from height 0, check the prev block of every block,
 		// put them in a tree
 	}
-	block_ptr = block_list->next;
-	printf("%s\n", "here 5");
-	printf("%p\n", block_ptr);
-	while (block_ptr != NULL) {
-		if (!block_ptr->b->height) {
-			continue;
-		}
-		printf("%s\n", "in the main");
-		bc_node *parent = search_hash(block_ptr->b->prev_block_hash, block_list);
-		parent->child = block_ptr;
-		block_ptr->parent = parent;
-		block_ptr = block_ptr->next;
-	}
+	// fclose(fp);
+	block_ptr = block_list->next;  // move block_ptr to the first non-empty block in the list
+	/*organize blocks in a tree*/
+	organize_tree(block_ptr);
+	/*check validity of each block node*/
+	check_validity(block_ptr);
+	/*find the longest valid chain*/
+	bc_ndoe *main_chain = find_mainchain(block_ptr);  // the node of at the end of main chiain 
 
-	check_validity(block_list->next);  // check validity of each block node
-	bc_ndoe *main_chain = find_mainchain(block_list->next);  // the node of at the end of main chiain 
-	
-	pubkey_balance *balance_list = 0, NULL, NULL;
+
+
+
+
+
+	/*************BELOW IS NOT CHECKED YET*********************************/
+	pubkey_balance *balance_list = 0, NULL, NULL;  // a list uesd to store the balance-txn pair
 	compute_balances(main_chain, balance_list);  // NEED Double-check;
 	print_balances(balance_list);
 
