@@ -7,7 +7,6 @@
 #include "block.h"
 #include "common.h"
 #include "transaction.h"
-#include "steal.h"
 
 /* Usage: ./balances *.blk
  * Reads in a list of block files and outputs a table of public key hashes and
@@ -24,6 +23,8 @@ const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the has
  *1. child in bc_node is not necessary. 
  *2. hash_output cannot init to NULL!!!!!!!!!!!!
  *3. block.c how to init the block->normal and block->reward?
+ *4. print out the valid chain
+ *5. block_list->curr_hash = NULL;
  */
 
 /*NOTE: 
@@ -51,7 +52,7 @@ typedef struct balance {
 typedef struct pubkey_balance {
 	int balance;
 	struct ecdsa_pubkey *pubkey;
-	pubkey_balance *next
+	struct pubkey_balance *next;
 } pubkey_balance;
 
 /* Add or subtract an amount from a linked list of balances. Call it like this:
@@ -108,7 +109,7 @@ bc_node* search_hash(hash_output src_hash, bc_node *block_list)
  *block_ptr: first non-empty node in the list*/
 void organize_tree(bc_node *block_ptr)
 {
-	if (ptr == NULL)
+	if (block_ptr == NULL)
 		printf("%s\n", "ERROR: Passing NULL pointer to organize_tree");
 	bc_node *ptr = block_ptr;
 	while (ptr != NULL) {
@@ -116,7 +117,7 @@ void organize_tree(bc_node *block_ptr)
 			continue;
 		}
 		bc_node *parent = search_hash(ptr->b->prev_block_hash, block_ptr);
-		parent->child = ptr;
+		// parent->child = ptr;
 		ptr->parent = parent;
 		ptr = ptr->next;
 	}
@@ -131,8 +132,9 @@ bool compare_hash(hash_output parent, hash_output child)
     return true;
 }
 
-/*searches the block tree for a transaction that has a specific hash value*/
-bool search_txn_hash(bc_node *curr_node, hash_output prev_transaction)
+/*jk: searches the block tree, from curr_node back to ancestors,
+ *for a transaction that has a specific hash value*/
+bc_node* search_txn_hash(bc_node *curr_node, hash_output prev_transaction)
 {
 	bc_node *ptr = curr_node;
 	if (ptr == NULL)
@@ -140,12 +142,28 @@ bool search_txn_hash(bc_node *curr_node, hash_output prev_transaction)
 	ptr = ptr->parent;
 	hash_output h_rtx;
 	hash_output h_ntx;
-	transaction_hash(&(ptr->b->reward_tx), h_rtx);
-	transaction_hash(&(ptr->b->reward_tx), h_ntx);
+	if (h_ntx == NULL || h_rtx == NULL)
+		printf("%s\n", "ERROR: malloc failed in search_txn_hash");
 	while(ptr != NULL) {
+		transaction_hash(&(ptr->b->reward_tx), h_rtx);
+		transaction_hash(&(ptr->b->normal_tx), h_ntx);		
 		if (byte32_cmp(h_rtx, prev_transaction)
-			|| byte32_cmp(h_ntx, prev_transaction))
+			|| byte32_cmp(h_ntx, prev_transaction)) {
+			return ptr;
+		}
+			
+		ptr = ptr->parent;
+	}
+	return ptr;
+}
+
+bool search_block_prev_hash(hash_output h, bc_node *curr_ptr)
+{
+	bc_node *ptr = curr_ptr->parent;
+	while(ptr != NULL) {
+		if (byte32_cmp(h, ptr->b->normal_tx.prev_transaction_hash)) {
 			return true;
+		}
 		ptr = ptr->parent;
 	}
 	return false;
@@ -160,7 +178,7 @@ void check_validity(bc_node *block_ptr)
 	if (block_ptr == NULL) {
 		printf("%s\n", "Passinng NULL pointer in check_validity");
 	}
-	bc_ndoe *ptr = block_ptr;
+	bc_node *ptr = block_ptr;
  	while(ptr != NULL) {
  		int height = ptr->b->height;
 		if (height == 0)
@@ -181,7 +199,6 @@ void check_validity(bc_node *block_ptr)
 			ptr = ptr->next;
 			continue;
 		}
-		/*************BELOW IS NOT CHECKED YET*********************************/
 		if (height != ptr->b->reward_tx.height || height != ptr->b->normal_tx.height) {
 			ptr->is_valid = 0;
 			ptr = ptr->next;
@@ -195,22 +212,39 @@ void check_validity(bc_node *block_ptr)
 			continue;
 		}
 		if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
-			if (!search_txn_hash(ptr, ptr->b->normal_tx.prev_transaction_hash)) {
+			bc_node *prev_txn_node = search_txn_hash(ptr, ptr->b->normal_tx.prev_transaction_hash);
+			// first cond
+			if (prev_txn_node == NULL) {
 				ptr->is_valid = 0;
 				ptr = ptr->next;
 				continue;				
 			}
-			if (!transaction_verify(&(ptr->b->normal_tx), &(ptr->parent->b->normal_tx))
-			|| !transaction_verify(&(ptr->b->normal_tx), &(ptr->parent->b->reward_tx))) {
+
+			// jk: The normal or reward of prev, can match one
+			int nm_match = -1;  // flag = 0: reward; flag = 1: normal
+			int verify_succ = -1;  // verify succeed or not
+			hash_output h;
+			transaction_hash(&(prev_txn_node->b->reward_tx), h);  // jk: compute the reward hash
+			if (byte32_cmp(h, ptr->b->normal_tx.prev_transaction_hash))
+				nm_match = 0;  // reward match
+			else nm_match = 1;
+			if (nm_match)  // if normal txn of prev match:
+				verify_succ = transaction_verify(&(ptr->b->normal_tx), &(prev_txn_node->b->normal_tx));
+			else // if reward txn of prev match:
+				verify_succ = transaction_verify(&(ptr->b->normal_tx), &(prev_txn_node->b->reward_tx));
+			// second cond			
+			if (!verify_succ) {
+				ptr->is_valid = 0;
+				ptr = ptr->next;
+				continue;				
+			}
+			// third cond
+			if (search_block_prev_hash(ptr->b->normal_tx.prev_transaction_hash, ptr)) {
 				ptr->is_valid = 0;
 				ptr = ptr->next;
 				continue;
 			}
-			if (search_txn_hash(ptr, ptr->b->normal_tx.prev_transaction_hash)) {
-				ptr->is_valid = 0;
-				ptr = ptr->next;
-				continue;
-			}
+
 		}
 		ptr = ptr->next;
 	}
@@ -220,7 +254,7 @@ void check_validity(bc_node *block_ptr)
 /*jk: find the longest mainchain from the *block_list*
  *return: the end node of mainchain
  */
-bc_ndoe* find_mainchain(bc_node *block_ptr)
+bc_node* find_mainchain(bc_node *block_ptr)
 {
 	if (block_ptr == NULL) 
 		printf("%s\n", "RROR: Passing NULL pointer to find_mainchain");
@@ -255,7 +289,7 @@ pubkey_balance* search_pubkey(struct ecdsa_pubkey *curr_pubkey, pubkey_balance *
 
 /*reduce one coin from the prev txn's pubkey, which has the same hash as prev_h
 *search back to curr_node->parent for prev txn.*/
-reduce_balance(hash_output prev_h, bc_node *curr_node)
+void reduce_balance(hash_output prev_h, bc_node *curr_node)
 {
 	if (curr_node == NULL) 
 		printf("%s\n", "RROR: Passing NULL curr_node to reduce_balance");
@@ -268,38 +302,38 @@ reduce_balance(hash_output prev_h, bc_node *curr_node)
 *store pubkey-balance pare in linked list: balance_list*/
 void compute_balances(bc_node *main_chain, pubkey_balance *balance_list)
 {
-	if (main_chain == NULL) 
-		printf("%s\n", "RROR: Passing NULL main_chain to compute_balances");
-	if (balance_list == NULL) 
-		printf("%s\n", "RROR: Passing NULL balance_list to compute_balances");
+	// if (main_chain == NULL) 
+	// 	printf("%s\n", "RROR: Passing NULL main_chain to compute_balances");
+	// if (balance_list == NULL) 
+	// 	printf("%s\n", "RROR: Passing NULL balance_list to compute_balances");
 
-	bc_node *ptr = main_chain;
-	while (ptr != NULL) {
-		/*add one coin to pubkey because of reward txn*/
-		struct ecdsa_pubkey *curr_pubkey = ptr->b->reward_tx.dest_pubkey;
-		pubkey_balancey *pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
-		pubkey_in_list->balance++;
+	// bc_node *ptr = main_chain;
+	// while (ptr != NULL) {
+	// 	/*add one coin to pubkey because of reward txn*/
+	// 	struct ecdsa_pubkey *curr_pubkey = ptr->b->reward_tx.dest_pubkey;
+	// 	pubkey_balance *pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
+	// 	pubkey_in_list->balance++;
 
-		/*search for normal txn and pubkey*/
-		if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
-			curr_pubkey = ptr->b->normal_tx.dest_pubkey;
-			pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
-			pubkey_in_list->balance++;	
-			reduce_balance(ptr->b->normal_tx.prev_transaction_hash, ptr);	
-		}
-		ptr = ptr->parent;
-		// search reward pub key, 
-		// if not found, add to list
-		// add one coin because reward;
+	// 	/*search for normal txn and pubkey*/
+	// 	if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
+	// 		curr_pubkey = ptr->b->normal_tx.dest_pubkey;
+	// 		pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
+	// 		pubkey_in_list->balance++;	
+	// 		reduce_balance(ptr->b->normal_tx.prev_transaction_hash, ptr);	
+	// 	}
+	// 	ptr = ptr->parent;
+	// 	// search reward pub key, 
+	// 	// if not found, add to list
+	// 	// add one coin because reward;
 
-		// check if there is noremal txn;
-		// if has: 
-		// 	search normal txn pub key
-		// 	if not found, add to list
-		// 	call move 
-		// go to parent block
+	// 	// check if there is noremal txn;
+	// 	// if has: 
+	// 	// 	search normal txn pub key
+	// 	// 	if not found, add to list
+	// 	// 	call move 
+	// 	// go to parent block
 		
-	}
+	// }
 }
 
 /*use to print the balance list*/
@@ -307,9 +341,9 @@ void print_balances(pubkey_balance *balance_list)
 {
 	if (balance_list == NULL) 
 		printf("%s\n", "RROR: Passing NULL balance_list to print_balances");
-	pubkey_balance ptr = balance_list->next;
+	pubkey_balance *ptr = balance_list->next;
 	while (ptr != NULL) {
-		printf("%s %d\n", byte32_to_hex(ptr->pubkey.x), ptr->balance);
+		printf("%s %d\n", byte32_to_hex(ptr->pubkey->x), ptr->balance);
 	}
 }
 
@@ -365,7 +399,7 @@ int main(int argc, char *argv[])
 	block_list->parent = NULL;
 	block_list->child = NULL;
 	block_list->b = NULL;
-	block_list->curr_hash = NULL;
+	// block_list->curr_hash = NULL;
 	block_list->is_valid = 1;
 	block_list->next = NULL;
 
@@ -382,6 +416,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "could not read %s\n", filename);
 			exit(1);
 		}
+		printf("%s\n", "here 1");
 
 		// block_print(&curr_block, fp);  // jk: print curr block to output file
 		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));  // jk: REWRITE in *Stack*
@@ -397,23 +432,39 @@ int main(int argc, char *argv[])
 		// put them in a tree
 	}
 	// fclose(fp);
+	printf("%s\n", "here 2");
 	block_ptr = block_list->next;  // move block_ptr to the first non-empty block in the list
 	/*organize blocks in a tree*/
 	organize_tree(block_ptr);
+
+	bc_node *temp_chain = main_chain;
+	FILE *fp2;
+	fp2 = fopen("mainchain.out", "a");	
+	while(temp_chain != NULL) {
+		block_print(temp_chain->b, fp2);
+		temp_chain = temp_chain->parent;
+	}	
+
+	printf("%s\n", "here 3");
 	/*check validity of each block node*/
 	check_validity(block_ptr);
+	printf("%s\n", "here 4");
 	/*find the longest valid chain*/
-	bc_ndoe *main_chain = find_mainchain(block_ptr);  // the node of at the end of main chiain 
+	bc_node *main_chain = find_mainchain(block_ptr);  // the node of at the end of main chiain 
+	printf("%s\n", "here 5");
 
+	// bc_node *temp_chain = main_chain;
+	// FILE *fp2;
+	// fp2 = fopen("mainchain.out", "a");	
+	// while(temp_chain != NULL) {
+	// 	block_print(temp_chain->b, fp2);
+	// 	temp_chain = temp_chain->parent;
+	// }	
+	// printf("%s\n", "here 6");
 
-
-
-
-
-	/*************BELOW IS NOT CHECKED YET*********************************/
-	pubkey_balance *balance_list = 0, NULL, NULL;  // a list uesd to store the balance-txn pair
-	compute_balances(main_chain, balance_list);  // NEED Double-check;
-	print_balances(balance_list);
+	// pubkey_balance *balance_list = 0, NULL, NULL;  // a list uesd to store the balance-txn pair
+	// compute_balances(main_chain, balance_list);  // NEED Double-check;
+	// print_balances(balance_list);
 
 	free_everything(); //TODO;
 
@@ -464,6 +515,21 @@ int main(int argc, char *argv[])
 	// 	printf("%s %d\n", byte32_to_hex(p->pubkey.x), p->balance);
 	// 	free(p);
 	// }
+	/* Build on top of the head of the main chain. */
+	// block_init(&newblock, &headblock);
+	// /* Give the reward to us. */
+	// transaction_set_dest_privkey(&newblock.reward_tx, mykey);
+	// /* The last transaction was in block 4. */
+	// transaction_set_prev_transaction(&newblock.normal_tx,
+	//    &block4.normal_tx);
+	// /* Send it to us. */
+	// transaction_set_dest_privkey(&newblock.normal_tx, mykey);
+	// /* Sign it with the guessed private key. */
+	// transaction_sign(&newblock.normal_tx, weakkey);
+	// /* Mine the new block. */
+	// block_mine(&newblock);
+	// /* Save to a file. */
+
 
 	return 0;
 }

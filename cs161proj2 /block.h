@@ -21,11 +21,10 @@
  * nonce is the value that is tweaked until the hash of the block satisfies
  * TARGET_HASH. */
 struct block {
-	hash_output = 
 	hash_output prev_block_hash;
 	uint32_t height;
 	uint32_t nonce;
-	struct transaction reward_tx;  // the height of both txns must be the same as block
+	struct transaction reward_tx;
 	struct transaction normal_tx;
 };
 
