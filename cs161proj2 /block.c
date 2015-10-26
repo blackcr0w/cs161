@@ -12,7 +12,7 @@
 static const size_t SERIALIZED_BLOCK_LEN =
 	/* prev_block_hash */
 	sizeof(hash_output) +
-	/* height, nonce */
+	/* height, nonce */ 
 	4 + 4 +
 	/* reward_tx */
 	4 + sizeof(hash_output) +
