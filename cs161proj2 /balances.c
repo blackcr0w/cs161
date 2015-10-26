@@ -71,8 +71,8 @@ static struct balance *balance_add(struct balance *balances,
 	struct balance *p;
 
 	for (p = balances; p != NULL; p = p->next) {
-		if ((byte32_cmp(p->pubkey.x, pubkey->x) == 0)
-			&& (byte32_cmp(p->pubkey.y, pubkey->y) == 0)) {
+		if ((!byte32_cmp(p->pubkey.x, pubkey->x) == 0)
+			&& (!byte32_cmp(p->pubkey.y, pubkey->y) == 0)) {
 			p->balance += amount;
 			return balances;
 		}
@@ -92,33 +92,88 @@ static struct balance *balance_add(struct balance *balances,
 /*jk: search hash in block_list, used in organize_tree*/
 bc_node* search_hash(hash_output src_hash, bc_node *block_list)
 {
+	FILE *fp;
+	fp = fopen("search_hash.out", "w");
+
 	if (block_list == NULL) 
 		printf("%s\n", "NUll pointer in search_hash");
+	int j;
+	printf("%s\n", "block hash in search_hash is");
+	for (j = 0; j < 32; j++) {
+	  printf("%x", src_hash[j]);
+	}
+	printf("%s\n", "");
 	bc_node *ptr = block_list;
+	int cnt = 0;
 	while (ptr != NULL) {
-		if (byte32_cmp(ptr->curr_hash, src_hash))
+		cnt++;
+		printf("cnt in search: %d\n", cnt);
+
+		if (!byte32_cmp(ptr->curr_hash, src_hash)) {
+		int k;
+		printf("%s\n", "find the match hash");
+		printf("%s\n", "src hash is");
+		for (k = 0; k < 32; k++) {
+		  printf("%x", src_hash[k]);
+		}
+		printf("%s\n", "finded hash is");	
+		for (k = 0; k < 32; k++) {
+		  printf("%x", ptr->curr_hash[k]);
+		}
+
+			block_print(ptr->b, fp);
 			return ptr;
+		}
 		else 
 			ptr = ptr->next;
 	}
 	printf("%s\n", "ERROR: There is no block with the this hash.");
-	return ptr;
+	fclose(fp);
+	return NULL;
+	
 }
 
 /*jk: organize block_list in a tree structure
  *block_ptr: first non-empty node in the list*/
 void organize_tree(bc_node *block_ptr)
 {
+	FILE *fp;
+	fp = fopen("organize.out", "w");
 	if (block_ptr == NULL)
 		printf("%s\n", "ERROR: Passing NULL pointer to organize_tree");
 	bc_node *ptr = block_ptr;
+	//printf("%p\n", );
+	int cnt = 0;
 	while (ptr != NULL) {
-		if (!ptr->b->height) {
+		cnt++;
+		printf("cnt is :%d\n", cnt);
+		if (ptr->b->height == 0) {
+			ptr->parent = NULL;
+			ptr = ptr->next;
 			continue;
 		}
-		bc_node *parent = search_hash(ptr->b->prev_block_hash, block_ptr);
+		printf("before search block: %p\n", ptr->b);
+		// printf("curr b:%p\n next b: %p\n", ptr->b, ptr->next->b);
+		bc_node *parent = search_hash((ptr->b->prev_block_hash), block_ptr);
+		//printf("after search block: ****  %p\n", parent->b);
+		if (parent == NULL) {
+			printf("%s\n", "root block:: no parent in organize_tree");
+			printf("%d\n", ptr->b->height);
+			printf("txn height: %d\n", ptr->b->reward_tx.height);
+			ptr->parent = NULL;
+			ptr->is_valid = 0;
+			ptr = ptr->next;
+			continue;
+		}
 		// parent->child = ptr;
+		int j;
+		printf("%s\n", "tree hash is");
+		for (j = 0; j < 32; j++) {
+		  printf("%x", parent->curr_hash[j]);
+		}
+
 		ptr->parent = parent;
+		block_print(ptr->parent->b, fp);
 		ptr = ptr->next;
 	}
 }
@@ -147,8 +202,8 @@ bc_node* search_txn_hash(bc_node *curr_node, hash_output prev_transaction)
 	while(ptr != NULL) {
 		transaction_hash(&(ptr->b->reward_tx), h_rtx);
 		transaction_hash(&(ptr->b->normal_tx), h_ntx);		
-		if (byte32_cmp(h_rtx, prev_transaction)
-			|| byte32_cmp(h_ntx, prev_transaction)) {
+		if (!byte32_cmp(h_rtx, prev_transaction)
+			|| !byte32_cmp(h_ntx, prev_transaction)) {
 			return ptr;
 		}
 			
@@ -161,7 +216,7 @@ bool search_block_prev_hash(hash_output h, bc_node *curr_ptr)
 {
 	bc_node *ptr = curr_ptr->parent;
 	while(ptr != NULL) {
-		if (byte32_cmp(h, ptr->b->normal_tx.prev_transaction_hash)) {
+		if (!byte32_cmp(h, ptr->b->normal_tx.prev_transaction_hash)) {
 			return true;
 		}
 		ptr = ptr->parent;
@@ -178,28 +233,52 @@ void check_validity(bc_node *block_ptr)
 	if (block_ptr == NULL) {
 		printf("%s\n", "Passinng NULL pointer in check_validity");
 	}
+	int height;
 	bc_node *ptr = block_ptr;
  	while(ptr != NULL) {
- 		int height = ptr->b->height;
-		if (height == 0)
+ 		printf("block ptr is: %p\n", ptr->b);
+ 		height = ptr->b->height;
+ 		printf("%d\n", height);
+
+		if (ptr->b->height == 0) {
+
+			printf("height inside %d\n", ptr->b->height);
+			printf("%s\n", "**************check_validity 1***********");
+			printf("%s\n", "wocao");
+
+
 			if (!byte32_cmp(ptr->curr_hash, GENESIS_BLOCK_HASH)) {
+				printf("%s\n", "**************check_validity 2***********");
 				ptr->is_valid = 0;
 				ptr = ptr->next;
 				continue;
 			}
+		}
+
+
 		if (height >= 1) {
+			printf("%s\n", "**************check_validity 3***********");
+			if (ptr->parent == NULL) {
+				printf("%s\n", "caonima");
+				ptr->is_valid = 0;
+				ptr = ptr->next;
+				continue;
+			}
 			if (ptr->parent->b->height != height - 1) {
+				printf("%s\n", "**************check_validity 4***********");
 				ptr->is_valid = 0;
 				ptr = ptr->next;
 				continue;
 			}
 		}
 		if (!hash_output_is_below_target(ptr->curr_hash)) {
+			printf("%s\n", "**************check_validity 5***********");
 			ptr->is_valid = 0;
 			ptr = ptr->next;
 			continue;
 		}
 		if (height != ptr->b->reward_tx.height || height != ptr->b->normal_tx.height) {
+			printf("%s\n", "**************check_validity 6***********");
 			ptr->is_valid = 0;
 			ptr = ptr->next;
 			continue;
@@ -207,25 +286,29 @@ void check_validity(bc_node *block_ptr)
 		if (!byte32_is_zero(ptr->b->reward_tx.prev_transaction_hash)
 			|| !byte32_is_zero(ptr->b->reward_tx.src_signature.r)
 			|| !byte32_is_zero(ptr->b->reward_tx.src_signature.s)) {
+			printf("%s\n", "**************check_validity 7***********");
 			ptr->is_valid = 0;
 			ptr = ptr->next;
 			continue;
 		}
 		if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
+			printf("%s\n", "**************check_validity 8***********");
 			bc_node *prev_txn_node = search_txn_hash(ptr, ptr->b->normal_tx.prev_transaction_hash);
 			// first cond
 			if (prev_txn_node == NULL) {
 				ptr->is_valid = 0;
 				ptr = ptr->next;
+				printf("%s\n", "**************check_validity 9***********");
 				continue;				
 			}
+			
 
 			// jk: The normal or reward of prev, can match one
 			int nm_match = -1;  // flag = 0: reward; flag = 1: normal
 			int verify_succ = -1;  // verify succeed or not
 			hash_output h;
 			transaction_hash(&(prev_txn_node->b->reward_tx), h);  // jk: compute the reward hash
-			if (byte32_cmp(h, ptr->b->normal_tx.prev_transaction_hash))
+			if (!byte32_cmp(h, ptr->b->normal_tx.prev_transaction_hash))
 				nm_match = 0;  // reward match
 			else nm_match = 1;
 			if (nm_match)  // if normal txn of prev match:
@@ -236,17 +319,21 @@ void check_validity(bc_node *block_ptr)
 			if (!verify_succ) {
 				ptr->is_valid = 0;
 				ptr = ptr->next;
+				printf("%s\n", "**************check_validity 9.5 ***********");
 				continue;				
 			}
+			
 			// third cond
 			if (search_block_prev_hash(ptr->b->normal_tx.prev_transaction_hash, ptr)) {
 				ptr->is_valid = 0;
 				ptr = ptr->next;
+				printf("%s\n", "**************check_validity 10***********");
 				continue;
 			}
 
 		}
 		ptr = ptr->next;
+		printf("%s\n", "**************check_validity 0***********");
 	}
 
 }
@@ -278,7 +365,7 @@ pubkey_balance* search_pubkey(struct ecdsa_pubkey *curr_pubkey, pubkey_balance *
 		printf("%s\n", "RROR: Passing NULL balance_list to search_pubkey");
 	pubkey_balance* ptr = balance_list;
 	while(ptr->next != NULL) {
-		if (byte32_cmp(ptr->pubkey->x, curr_pubkey->x) && byte32_cmp(ptr->pubkey->y, curr_pubkey->y))
+		if (!byte32_cmp(ptr->pubkey->x, curr_pubkey->x) && !byte32_cmp(ptr->pubkey->y, curr_pubkey->y))
 			return ptr;
 		else
 			ptr = ptr->next;
@@ -302,38 +389,38 @@ void reduce_balance(hash_output prev_h, bc_node *curr_node)
 *store pubkey-balance pare in linked list: balance_list*/
 void compute_balances(bc_node *main_chain, pubkey_balance *balance_list)
 {
-	// if (main_chain == NULL) 
-	// 	printf("%s\n", "RROR: Passing NULL main_chain to compute_balances");
-	// if (balance_list == NULL) 
-	// 	printf("%s\n", "RROR: Passing NULL balance_list to compute_balances");
+	if (main_chain == NULL) 
+		printf("%s\n", "RROR: Passing NULL main_chain to compute_balances");
+	if (balance_list == NULL) 
+		printf("%s\n", "RROR: Passing NULL balance_list to compute_balances");
 
-	// bc_node *ptr = main_chain;
-	// while (ptr != NULL) {
-	// 	/*add one coin to pubkey because of reward txn*/
-	// 	struct ecdsa_pubkey *curr_pubkey = ptr->b->reward_tx.dest_pubkey;
-	// 	pubkey_balance *pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
-	// 	pubkey_in_list->balance++;
+	bc_node *ptr = main_chain;
+	while (ptr != NULL) {
+		/*add one coin to pubkey because of reward txn*/
+		struct ecdsa_pubkey *curr_pubkey = ptr->b->reward_tx.dest_pubkey;
+		pubkey_balance *pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
+		pubkey_in_list->balance++;
 
-	// 	/*search for normal txn and pubkey*/
-	// 	if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
-	// 		curr_pubkey = ptr->b->normal_tx.dest_pubkey;
-	// 		pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
-	// 		pubkey_in_list->balance++;	
-	// 		reduce_balance(ptr->b->normal_tx.prev_transaction_hash, ptr);	
-	// 	}
-	// 	ptr = ptr->parent;
-	// 	// search reward pub key, 
-	// 	// if not found, add to list
-	// 	// add one coin because reward;
+		/*search for normal txn and pubkey*/
+		if (!byte32_is_zero(ptr->b->normal_tx.prev_transaction_hash)) {
+			curr_pubkey = ptr->b->normal_tx.dest_pubkey;
+			pubkey_in_list = search_pubkey(curr_pubkey, balance_list);
+			pubkey_in_list->balance++;	
+			reduce_balance(ptr->b->normal_tx.prev_transaction_hash, ptr);	
+		}
+		ptr = ptr->parent;
+		// search reward pub key, 
+		// if not found, add to list
+		// add one coin because reward;
 
-	// 	// check if there is noremal txn;
-	// 	// if has: 
-	// 	// 	search normal txn pub key
-	// 	// 	if not found, add to list
-	// 	// 	call move 
-	// 	// go to parent block
+		// check if there is noremal txn;
+		// if has: 
+		// 	search normal txn pub key
+		// 	if not found, add to list
+		// 	call move 
+		// go to parent block
 		
-	// }
+	}
 }
 
 /*use to print the balance list*/
@@ -403,68 +490,91 @@ int main(int argc, char *argv[])
 	block_list->is_valid = 1;
 	block_list->next = NULL;
 
-	// FILE *fp;
-	// fp = fopen("blockprint.out", "a");
+	FILE *fp;
+	fp = fopen("blockprint.out", "w");
+	printf("arg c is: %d\n", argc);
 	for (i = 1; i < argc; i++) {  // jk: read all blocks into block_list
+		printf("arg c i is: %d\n", i);
 		char *filename;
-		struct block curr_block;
+		struct block *curr_block = (struct block *)malloc(sizeof(struct block));
+		printf("new block add1111111111:%p\n", curr_block);
 		int rc;
 
 		filename = argv[i];
-		rc = block_read_filename(&curr_block, filename);
+		rc = block_read_filename(curr_block, filename);
 		if (rc != 1) {
 			fprintf(stderr, "could not read %s\n", filename);
 			exit(1);
 		}
 		printf("%s\n", "here 1");
 
-		// block_print(&curr_block, fp);  // jk: print curr block to output file
+		block_print(curr_block, fp);  // jk: print curr block to output file
 		bc_node *curr_node = (bc_node *)malloc(sizeof(bc_node));  // jk: REWRITE in *Stack*
 		curr_node->parent = NULL;
 		curr_node->child = NULL;
-		curr_node->b = &curr_block;
+		curr_node->b = curr_block;
+		printf("new block addr2222222222:%p\n", curr_block);
+
+		int j;
+		printf("%s\n", "block hash is");
+		for (j = 0; j < 32; j++) {
+		  printf("%x", curr_block->prev_block_hash[j]);
+		}
+		printf("\n");
+		printf("%s\n", "prev hash is:");
+		for (j = 0; j < 32; j++) {
+		  printf("%x", curr_node->b->prev_block_hash[j]);
+		}
 		curr_node->is_valid = 0;
-		block_hash(&curr_block, curr_node->curr_hash);		
+		block_hash(curr_block, curr_node->curr_hash);
+		printf("%s\n", curr_node->curr_hash);	
 		block_ptr->next = curr_node;
+		printf("this node: %p\n", block_ptr->b);
 		curr_node->next = NULL;
-		block_ptr = curr_node;
+		block_ptr = block_ptr->next;
+		printf("next node: %p\n", block_ptr);
 		// from height 0, check the prev block of every block,
 		// put them in a tree
 	}
 	// fclose(fp);
-	printf("%s\n", "here 2");
+	printf("%s\n", "*********************************here 2*******************************************");
 	block_ptr = block_list->next;  // move block_ptr to the first non-empty block in the list
+	//printf("block_list node: %p\n", block_list-);
+	// printf("block ptr node: %p\n", block_ptr->b);
+	// printf("next node: %p\n", block_ptr->next->b);
+	// printf("next node: %p\n", block_ptr->next->next->b);
+	// printf("next node: %p\n", block_ptr->next->next->next->b);
 	/*organize blocks in a tree*/
 	organize_tree(block_ptr);
 
-	bc_node *temp_chain = main_chain;
-	FILE *fp2;
-	fp2 = fopen("mainchain.out", "a");	
-	while(temp_chain != NULL) {
-		block_print(temp_chain->b, fp2);
-		temp_chain = temp_chain->parent;
-	}	
-
-	printf("%s\n", "here 3");
-	/*check validity of each block node*/
-	check_validity(block_ptr);
-	printf("%s\n", "here 4");
-	/*find the longest valid chain*/
-	bc_node *main_chain = find_mainchain(block_ptr);  // the node of at the end of main chiain 
-	printf("%s\n", "here 5");
-
 	// bc_node *temp_chain = main_chain;
 	// FILE *fp2;
-	// fp2 = fopen("mainchain.out", "a");	
+	// fp2 = fopen("mainchain.out", "w");	
 	// while(temp_chain != NULL) {
 	// 	block_print(temp_chain->b, fp2);
 	// 	temp_chain = temp_chain->parent;
 	// }	
-	// printf("%s\n", "here 6");
 
-	// pubkey_balance *balance_list = 0, NULL, NULL;  // a list uesd to store the balance-txn pair
-	// compute_balances(main_chain, balance_list);  // NEED Double-check;
-	// print_balances(balance_list);
+	printf("%s\n", "*********************************here 3*******************************************");
+	/*check validity of each block node*/
+	check_validity(block_ptr);
+	printf("%s\n", "*********************************here 4*******************************************");
+	/*find the longest valid chain*/
+	bc_node *main_chain = find_mainchain(block_ptr);  // the node of at the end of main chiain 
+	printf("%s\n", "*********************************here 5*******************************************");
+
+	bc_node *temp_chain = main_chain;
+	FILE *fp2;
+	fp2 = fopen("mainchain.out", "w");	
+	while(temp_chain != NULL) {
+		block_print(temp_chain->b, fp2);
+		temp_chain = temp_chain->parent;
+	}	
+	printf("%s\n", "*********************************here 6*******************************************");
+
+	pubkey_balance *balance_list = (pubkey_balance *)malloc(sizeof(pubkey_balance))  // a list uesd to store the balance-txn pair
+	compute_balances(main_chain, balance_list);  // NEED Double-check;
+	print_balances(balance_list);
 
 	free_everything(); //TODO;
 
