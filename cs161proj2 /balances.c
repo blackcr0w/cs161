@@ -22,6 +22,7 @@ const hash_output GENESIS_BLOCK_HASH = {  // using block_hash to compute the has
 };
 /*TODO: 
  *1. child in bc_node is not necessary. 
+ *2. hash_output cannot init to NULL!!!!!!!!!!!!
  */
 
 typedef struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier

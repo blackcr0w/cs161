@@ -120,6 +120,7 @@ void block_init(struct block *b, const struct block *parent)
 }
 
 /* Compute the hash value of a block using the current nonce. */
+/*jk: TODO: how to init the block->normal and block->reward?*/
 void block_hash(const struct block *b, hash_output h)
 {
 	unsigned char buf[SERIALIZED_BLOCK_LEN];
@@ -134,9 +135,27 @@ void block_hash(const struct block *b, hash_output h)
 
 /* Mine a block. Increment the nonce until the block's hash output satisfies
  * TARGET_HASH. */
+/* A block is one mining output. It contains one or two transactions: a reward
+ * transaction (paid to the miner's public key) and an optional normal
+ * transaction (paid from one public key to any other). The reward transaction
+ * must have all zeros as its prev_transaction_hash and src_signature. The
+ * normal transaction, if unused, must have all zeros as its
+ * prev_transaction_hash, dest_pubkey_hash, and src_signature.
+ */
 void block_mine(struct block *b)  // jk: used in step 2
 {
 	/* TODO */
+	if (b == NULL)
+		printf("%s\n", 'ERROR: Passing NULL b in block_mine.');	
+	hash_output h = malloc(sizeof(hash_output));  // jk: TODO: do not know how to init hash_output
+	block_hash(b, h);
+	FILE *fp;
+	fp = fopen("block_mine.out", "a");	
+	while (!hash_output_is_below_target(h)) {
+		block_print(b, fp);
+		b->nonce++;
+	}
+	fclose(fp);
 }
 
 /* Print a human-readable representation of the block to fp. */
