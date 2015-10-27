@@ -51,4 +51,6 @@ int transaction_sign(struct transaction *tx, EC_KEY *key);
 
 int transaction_verify(struct transaction *tx, const struct transaction *prev_tx);
 
+int bn2bin(const BIGNUM *bn, unsigned char *dest, size_t len);
+
 #endif

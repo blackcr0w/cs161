@@ -105,24 +105,24 @@ EC_KEY *key_read(FILE *fp)
 		return NULL;
 
 	/* Compute the public key. (Not all versions of OpenSSL do this automatically.) */
-	EC_POINT *pubkey;
-	pubkey = EC_POINT_new(EC_KEY_get0_group(key));
+	EC_POINT *pubkey;  // 0. pubkey is a EC point 
+	pubkey = EC_POINT_new(EC_KEY_get0_group(key));  // 1. create new point
 	if (pubkey == NULL) {
 		EC_KEY_free(key);
 		return NULL;
 	}
-	if (EC_POINT_mul(EC_KEY_get0_group(key), pubkey,
+	if (EC_POINT_mul(EC_KEY_get0_group(key), pubkey,  // 2. compute pukey
 		EC_KEY_get0_private_key(key), NULL, NULL, NULL) != 1) {
 		EC_POINT_free(pubkey);
 		EC_KEY_free(key);
 		return NULL;
 	}
-	if (EC_KEY_set_public_key(key, pubkey) != 1) {
+	if (EC_KEY_set_public_key(key, pubkey) != 1) {  // 3.set pubkey
 		EC_POINT_free(pubkey);
 		EC_KEY_free(key);
 		return NULL;
 	}
-	EC_POINT_free(pubkey);
+	EC_POINT_free(pubkey);  // free pubkey
 
 	return key;
 }

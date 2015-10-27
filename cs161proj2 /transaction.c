@@ -47,7 +47,7 @@ void transaction_set_prev_transaction(struct transaction *tx, const struct trans
 
 /* A wrapper around BN_bn2bin that left-pads with zero bytes. If bn does not fit
  * in len bytes, returns 0 to indicate an error; otherwise returns 1. */
-static int bn2bin(const BIGNUM *bn, unsigned char *dest, size_t len)
+int bn2bin(const BIGNUM *bn, unsigned char *dest, size_t len)
 {
 	int num_bytes;
 

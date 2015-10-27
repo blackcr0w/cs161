@@ -76,10 +76,11 @@ int main(int argc, char *argv[])
 
 	unsigned char buf[32];
 	int i;
+	srand(1234);
 	for (i = 0; i < 32; i++) {
 		buf[i] = rand() & 0xff;
 	}
-	key = generate_key_from_buffer(const unsigned char buf[32]);
+	key = generate_key_from_buffer(buf);
 	if (key == NULL) {
 		fprintf(stderr, "error generating key\n");
 		exit(1);
@@ -95,3 +96,6 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+
+
