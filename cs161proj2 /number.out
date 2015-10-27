@@ -28,3 +28,11 @@ block number: 9
 rw key: 0c34d5629458fce5a9ecae64d7060d641be37339a57430d7324b5f38d396761d
 nm key: 0000000000000000000000000000000000000000000000000000000000000000
 block number: 10
+
+
+main chain node: 7
+main chain node: 3
+main chain node: 2
+main chain node: 8
+main chain node: 1
+main chain node: 9
