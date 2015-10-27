@@ -398,19 +398,7 @@ struct transaction* search_pubkey(bc_node *curr_ptr, hash_output src_h)
 	return NULL;
 }
 
-/*reduce one coin from the prev txn's pubkey, which has the same hash as prev_h
-*search back to curr_node->parent for prev txn.*/
-// void reduce_balance(hash_output prev_h, bc_node *curr_node)
-// {
-// 	if (curr_node == NULL) 
-// 		printf("%s\n", "RROR: Passing NULL curr_node to reduce_balance");
-// 	while(curr_node != NULL) {
 
-// 	}
-// }
-
-/*compute balances of all pubkey on mainchain, 
-*store pubkey-balance pare in linked list: balance_list*/
 struct balance* compute_balances(bc_node *main_chain, struct balance *balances)
 {
 	if (main_chain == NULL) 

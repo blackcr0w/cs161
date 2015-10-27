@@ -145,17 +145,17 @@ void block_hash(const struct block *b, hash_output h)
 void block_mine(struct block *b)  // jk: used in step 2
 {
 	/* TODO */
-	// if (b == NULL)
-	// 	printf("%s\n", 'ERROR: Passing NULL b in block_mine.');	
-	// hash_output h = malloc(sizeof(hash_output));  // jk: TODO: do not know how to init hash_output
-	// block_hash(b, h);
-	// FILE *fp;
-	// fp = fopen("block_mine.out", "a");	
-	// while (!hash_output_is_below_target(h)) {
-	// 	block_print(b, fp);
-	// 	b->nonce++;
-	// }
-	// fclose(fp);
+	if (b == NULL)
+		printf("%s\n", 'ERROR: Passing NULL b in block_mine.');	
+	hash_output h;  // jk: TODO: do not know how to init hash_output
+	block_hash(b, h);
+	FILE *fp;
+	fp = fopen("block_mine.out", "a");	
+	while (!hash_output_is_below_target(h)) {
+		b->nonce++;
+	}
+	block_print(b, fp);
+	fclose(fp);
 }
 
 /* Print a human-readable representation of the block to fp. */

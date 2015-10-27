@@ -74,7 +74,12 @@ int main(int argc, char *argv[])
 
 	filename = argv[1];
 
-	key = generate_key();
+	unsigned char buf[32];
+	int i;
+	for (i = 0; i < 32; i++) {
+		buf[i] = rand() & 0xff;
+	}
+	key = generate_key_from_buffer(const unsigned char buf[32]);
 	if (key == NULL) {
 		fprintf(stderr, "error generating key\n");
 		exit(1);
