@@ -46,11 +46,11 @@ def connect_with_socks(remote_address, socks_address):
     dest_ip = int(7)  # this is to represent: cannot resolt the destIP from hostname
     # rule = 'cchIBB32sB'   dest_ip, 15, zero, hostname, zero
     zero = struct.pack('B', 0)
-    rule = 'BBhIBc32s'  
+    rule = '!BBhIBc32s'  # Q: userID + 
     # a = struct.pack('32s', "aaa")
-    packed_request = struct.pack(rule, 4, 2, port, dest_ip, 15, zero, hostname)
+    packed_request = struct.pack(rule, 4, 1, port, dest_ip, 15, zero, hostname)
 
-    # print("packet request: " + packed_request)
+    print("packet request: " ,packed_request)
     s.send(packed_request)
     response = s.recv(16)
     # response = str.decode(response)

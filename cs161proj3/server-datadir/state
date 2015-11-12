@@ -1,34 +1,43 @@
-# Tor state file last generated on 2015-11-12 04:57:22 local time
+# Tor state file last generated on 2015-11-12 19:59:27 local time
 # Other times below are in UTC
 # You *do not* need to edit this file.
 
 EntryGuard payload 93E35C5AC90C00A735BEC11877EE59A825BA2456 DirCache
 EntryGuardAddedBy 93E35C5AC90C00A735BEC11877EE59A825BA2456 0.2.6.10 2015-10-19 18:27:20
-EntryGuardPathBias 39.000000 39.000000 39.000000 0.000000 0.000000 1.000000
-EntryGuardPathUseBias 15.000000 15.000000
+EntryGuardPathBias 219.000000 213.000000 213.000000 0.000000 0.000000 9.000000
+EntryGuardPathUseBias 63.000000 63.000000
 EntryGuard fluxe3 F8D27B163B9247B232A2EEE68DD8B698695C28DE DirCache
 EntryGuardAddedBy F8D27B163B9247B232A2EEE68DD8B698695C28DE 0.2.6.10 2015-10-23 15:22:45
-EntryGuardPathBias 2.000000 2.000000 2.000000 0.000000 0.000000 0.000000
-EntryGuardPathUseBias 1.000000 1.000000
+EntryGuardPathBias 4.000000 4.000000 4.000000 0.000000 0.000000 0.000000
+EntryGuardPathUseBias 3.000000 3.000000
 EntryGuard thanatosCZ 12FD624EE73CEF37137C90D38B2406A66F68FAA2 DirCache
 EntryGuardAddedBy 12FD624EE73CEF37137C90D38B2406A66F68FAA2 0.2.6.10 2015-11-11 00:45:08
 TorVersion Tor 0.2.6.10 (git-58c51dc6087b0936)
-LastWritten 2015-11-12 04:57:22
-TotalBuildTimes 34
-CircuitBuildTimeBin 475 4
-CircuitBuildTimeBin 525 4
+LastWritten 2015-11-12 19:59:27
+TotalBuildTimes 41
+CircuitBuildTimeBin 475 2
 CircuitBuildTimeBin 575 1
 CircuitBuildTimeBin 625 2
 CircuitBuildTimeBin 675 4
-CircuitBuildTimeBin 725 1
-CircuitBuildTimeBin 775 4
-CircuitBuildTimeBin 825 2
-CircuitBuildTimeBin 875 1
+CircuitBuildTimeBin 725 2
+CircuitBuildTimeBin 775 2
+CircuitBuildTimeBin 825 4
+CircuitBuildTimeBin 875 2
 CircuitBuildTimeBin 925 1
-CircuitBuildTimeBin 975 1
-CircuitBuildTimeBin 1025 3
-CircuitBuildTimeBin 1075 2
-CircuitBuildTimeBin 1225 1
+CircuitBuildTimeBin 975 2
+CircuitBuildTimeBin 1025 2
+CircuitBuildTimeBin 1075 1
+CircuitBuildTimeBin 1125 1
+CircuitBuildTimeBin 1175 1
+CircuitBuildTimeBin 1225 2
+CircuitBuildTimeBin 1275 1
+CircuitBuildTimeBin 1425 2
 CircuitBuildTimeBin 1525 1
-CircuitBuildTimeBin 1575 1
-CircuitBuildTimeBin 1725 1
+CircuitBuildTimeBin 1675 1
+CircuitBuildTimeBin 1775 1
+CircuitBuildTimeBin 2025 1
+CircuitBuildTimeBin 2175 1
+CircuitBuildTimeBin 2825 1
+CircuitBuildTimeBin 3225 1
+CircuitBuildTimeBin 4025 1
+CircuitBuildTimeBin 5625 1
