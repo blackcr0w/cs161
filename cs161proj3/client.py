@@ -42,7 +42,7 @@ def connect_with_socks(remote_address, socks_address):
     # TODO
     s = socket.socket(socket.AF_INET)
 
-    request = struct.pack("cchihh", "4", "2", port, 1, )
+    request = struct.pack("cchihh32s", "4", "2", port, 1, )
 
     s.connect(remote_address)
     return s    

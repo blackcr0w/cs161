@@ -26,6 +26,7 @@ class options(object):
 # Return a socket connected to remote_address, which is a (hostname, port)
 # tuple.
 def connect(remote_address):
+    # remote_host = 127.0.0.1, remote_port = 5280
     s = socket.socket(socket.AF_INET)
     s.connect(remote_address)
     return s
@@ -36,10 +37,25 @@ def connect(remote_address):
 # '55mkdgawjdimhnkb.onion', '5280', 127.0.0.1, 9150
 def connect_with_socks(remote_address, socks_address):
     hostname, port = remote_address
+    hostname = str.encode(hostname)
+    type(hostname)
+   # print("*******  " + hostname)
     # TODO
     s = socket.socket(socket.AF_INET)
     s.connect(socks_address)
-    
+    dest_ip = int(7)  # this is to represent: cannot resolt the destIP from hostname
+    # rule = 'cchIBB32sB'   dest_ip, 15, zero, hostname, zero
+    zero = struct.pack('B', 0)
+    rule = 'BBhIBc32s'  
+    # a = struct.pack('32s', "aaa")
+    packed_request = struct.pack(rule, 4, 2, port, dest_ip, 15, zero, hostname)
+
+    # print("packet request: " + packed_request)
+    s.send(packed_request)
+    response = s.recv(16)
+    # response = str.decode(response)
+    print (response)
+    return s
 
 # Parse command line options.
 opts, args = getopt.gnu_getopt(sys.argv[1:], "",
