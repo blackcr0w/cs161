@@ -25,6 +25,8 @@ class options(object):
 
 # Return a socket connected to remote_address, which is a (hostname, port)
 # tuple.
+# jk: remote_hostname = 127.0.0.1 
+# jk: remote_port = 5280
 def connect(remote_address):
     s = socket.socket(socket.AF_INET)
     s.connect(remote_address)
@@ -32,38 +34,42 @@ def connect(remote_address):
 
 # Return a socket connected to remote_address through the SOCKS4a proxy at
 # socks_address.
-# remote host, remote port, localhost, tor proxy port
-# '55mkdgawjdimhnkb.onion', '5280', 127.0.0.1, 9150
+
+# jk: argument = 
+# jk: (hostname = yoursite.onion, remote_port = 5280), ("127.0.0.1", options.socks_port = 9150)
 def connect_with_socks(remote_address, socks_address):
     hostname, port = remote_address
     # TODO
     s = socket.socket(socket.AF_INET)
-    s.connect(socks_address)
-    
+
+    request = struct.pack("cchihh", "4", "2", port, 1, )
+
+    s.connect(remote_address)
+    return s    
+    raise NotImplementedError("connect_with_socks not implemented")
 
 # Parse command line options.
 opts, args = getopt.gnu_getopt(sys.argv[1:], "",
     ["disable-tls", "socks-port=", "tls-trustfile=", "help"])
+print ("opts: " + str(opts))  # jk: print to see
+print ("args: " + str(args))
 for o, a in opts:
-    print ("opt = " + str(opts))
-    print ("args = " + str(args))
-    print ("o = : " + str(o))
-    print ("a = : " + str(a))
-
     if o == "--disable-tls":
         options.use_tls = False
     elif o == "--socks-port":
         options.socks_port = int(a)
+        print ("options.socks_port: " + str(options.socks_port))  # jk: print to see
+
     elif o == "--tls-trustfile":
         options.tls_trust_filename = a
     elif o == "--help":
         usage()
         sys.exit()
+
 try:
-    remote_hostname, remote_port = args  # '55mkdgawjdimhnkb.onion', '5280'
+    remote_hostname, remote_port = args
     remote_port = int(remote_port)
-    print ("remote_hostname = : " + str(remote_hostname))
-    print ("remote_port = : " + str(remote_port))
+
 except ValueError:
     usage(sys.stderr)
     sys.exit(1)
@@ -71,13 +77,9 @@ except ValueError:
 print("connecting", file=sys.stderr)
 try:
     if options.socks_port is not None:
-        # '55mkdgawjdimhnkb.onion', '5280', 127.0.0.1, 9150
-        # remote host, remote port, localhost, tor proxy port
-        print ("options.socks_port: " + str(options.socks_port))
         remote_socket = connect_with_socks((remote_hostname, remote_port), ("127.0.0.1", options.socks_port))
     else:
-        # remote_host = 127.0.0.1, remote_port = 5280
-        remote_socket = connect((remote_hostname, remote_port))  
+        remote_socket = connect((remote_hostname, remote_port))
 except socket.error as e:
     print("cannot connect to %s port %d: %s" % (remote_hostname, remote_port, e), file=sys.stderr)
     sys.exit(1)

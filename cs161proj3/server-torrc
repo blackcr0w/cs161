@@ -1,4 +1,4 @@
-SocksPort 0
+SocksPort 9150
 ORPort 0
 DataDirectory server-datadir
 HiddenServiceDir hs-chat-dir
