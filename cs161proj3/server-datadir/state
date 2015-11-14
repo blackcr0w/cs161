@@ -1,43 +1,70 @@
-# Tor state file last generated on 2015-11-12 19:59:27 local time
+# Tor state file last generated on 2015-11-14 19:06:32 local time
 # Other times below are in UTC
 # You *do not* need to edit this file.
 
 EntryGuard payload 93E35C5AC90C00A735BEC11877EE59A825BA2456 DirCache
 EntryGuardAddedBy 93E35C5AC90C00A735BEC11877EE59A825BA2456 0.2.6.10 2015-10-19 18:27:20
-EntryGuardPathBias 219.000000 213.000000 213.000000 0.000000 0.000000 9.000000
-EntryGuardPathUseBias 63.000000 63.000000
+EntryGuardPathBias 247.750000 237.000000 229.000000 8.000000 0.000000 11.250000
+EntryGuardPathUseBias 75.750000 75.750000
 EntryGuard fluxe3 F8D27B163B9247B232A2EEE68DD8B698695C28DE DirCache
 EntryGuardAddedBy F8D27B163B9247B232A2EEE68DD8B698695C28DE 0.2.6.10 2015-10-23 15:22:45
-EntryGuardPathBias 4.000000 4.000000 4.000000 0.000000 0.000000 0.000000
-EntryGuardPathUseBias 3.000000 3.000000
+EntryGuardPathBias 55.000000 55.000000 55.000000 0.000000 0.000000 2.000000
+EntryGuardPathUseBias 39.000000 39.000000
 EntryGuard thanatosCZ 12FD624EE73CEF37137C90D38B2406A66F68FAA2 DirCache
 EntryGuardAddedBy 12FD624EE73CEF37137C90D38B2406A66F68FAA2 0.2.6.10 2015-11-11 00:45:08
+EntryGuardPathBias 31.000000 30.000000 27.000000 3.000000 0.000000 1.000000
+EntryGuardPathUseBias 19.000000 19.000000
+EntryGuard SGGSUK2 593B6169DA24F3835F0B485317C0DB529B8F3E58 DirCache
+EntryGuardDownSince 2015-11-12 23:08:39 2015-11-12 23:08:39
+EntryGuardUnlistedSince 2015-11-12 23:13:46
+EntryGuardAddedBy 593B6169DA24F3835F0B485317C0DB529B8F3E58 0.2.6.10 2015-11-10 11:57:44
+EntryGuard torentorium 8B7F47AE1A5D954A3E58ACDE0865D09DBA5B738D DirCache
+EntryGuardDownSince 2015-11-14 18:43:14 2015-11-14 18:43:14
+EntryGuardAddedBy 8B7F47AE1A5D954A3E58ACDE0865D09DBA5B738D 0.2.6.10 2015-11-03 09:07:33
+EntryGuard donaTor D3044D67B9847CF7ACA446C96D126BA2CE2CDB2F DirCache
+EntryGuardDownSince 2015-11-13 02:47:00 2015-11-14 18:43:15
+EntryGuardAddedBy D3044D67B9847CF7ACA446C96D126BA2CE2CDB2F 0.2.6.10 2015-10-31 08:26:08
+EntryGuard gartentor 44BEEA03A5338D7308D06DA3D56F1F2F2F9FBFC2 DirCache
+EntryGuardDownSince 2015-11-14 18:45:49 2015-11-14 18:45:49
+EntryGuardAddedBy 44BEEA03A5338D7308D06DA3D56F1F2F2F9FBFC2 0.2.6.10 2015-11-08 20:41:25
 TorVersion Tor 0.2.6.10 (git-58c51dc6087b0936)
-LastWritten 2015-11-12 19:59:27
-TotalBuildTimes 41
-CircuitBuildTimeBin 475 2
-CircuitBuildTimeBin 575 1
-CircuitBuildTimeBin 625 2
+LastWritten 2015-11-14 19:06:32
+TotalBuildTimes 111
+CircuitBuildTimeBin 525 4
+CircuitBuildTimeBin 575 7
+CircuitBuildTimeBin 625 4
 CircuitBuildTimeBin 675 4
-CircuitBuildTimeBin 725 2
-CircuitBuildTimeBin 775 2
-CircuitBuildTimeBin 825 4
-CircuitBuildTimeBin 875 2
-CircuitBuildTimeBin 925 1
-CircuitBuildTimeBin 975 2
+CircuitBuildTimeBin 725 10
+CircuitBuildTimeBin 775 3
+CircuitBuildTimeBin 825 7
+CircuitBuildTimeBin 875 10
+CircuitBuildTimeBin 925 6
+CircuitBuildTimeBin 975 4
 CircuitBuildTimeBin 1025 2
-CircuitBuildTimeBin 1075 1
+CircuitBuildTimeBin 1075 9
 CircuitBuildTimeBin 1125 1
-CircuitBuildTimeBin 1175 1
+CircuitBuildTimeBin 1175 2
 CircuitBuildTimeBin 1225 2
-CircuitBuildTimeBin 1275 1
-CircuitBuildTimeBin 1425 2
-CircuitBuildTimeBin 1525 1
-CircuitBuildTimeBin 1675 1
-CircuitBuildTimeBin 1775 1
-CircuitBuildTimeBin 2025 1
+CircuitBuildTimeBin 1275 9
+CircuitBuildTimeBin 1375 1
+CircuitBuildTimeBin 1425 1
+CircuitBuildTimeBin 1475 3
+CircuitBuildTimeBin 1575 2
+CircuitBuildTimeBin 1625 2
+CircuitBuildTimeBin 1725 1
+CircuitBuildTimeBin 1875 1
 CircuitBuildTimeBin 2175 1
-CircuitBuildTimeBin 2825 1
+CircuitBuildTimeBin 2425 1
+CircuitBuildTimeBin 2925 1
+CircuitBuildTimeBin 2975 1
 CircuitBuildTimeBin 3225 1
-CircuitBuildTimeBin 4025 1
-CircuitBuildTimeBin 5625 1
+CircuitBuildTimeBin 3325 1
+CircuitBuildTimeBin 3525 1
+CircuitBuildTimeBin 3625 1
+CircuitBuildTimeBin 3725 1
+CircuitBuildTimeBin 3975 1
+CircuitBuildTimeBin 4225 1
+CircuitBuildTimeBin 4625 2
+CircuitBuildTimeBin 4875 1
+CircuitBuildTimeBin 5275 1
+CircuitBuildTimeBin 5325 1
