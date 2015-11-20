@@ -1,0 +1,8 @@
+1. The point here is, the how other users distinguish other users is simply by the <user id> broadcasted by server. And ohter user assume that every user's message finishes in one line. Since in the server side, the server simply "rstrip" the newline character and add another one in the end. We can figure out what is the newline charracter in "bytes" and insert it in our message. After the newline, we can put the forged <user id> and put the forged message.
+
+2. HiddenServiceAuthorizeClient. This configuration can make the hidden service accessible for authorized clients only.
+
+3. The SSLSocket fd is an abstract indicator used to access a file or other input/output resource, such as a pipe or network connection. Value 0 is standard input, value 1 is standard output, value 2 is standard error, so here, fd starts at 3, and every time  a client connect to the server, fd plus one.
+
+4. We have some ideas here:
+(1) If one person can control two nodes, he can compare the packet size of the two nodes. If the packet size in two nodes matches (adding the packet size), he can conclude that these two packets are from the same person. The anonymity fails here.
