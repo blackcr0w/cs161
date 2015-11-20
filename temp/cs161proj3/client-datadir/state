@@ -1,0 +1,35 @@
+# Tor state file last generated on 2015-11-20 20:29:27 local time
+# Other times below are in UTC
+# You *do not* need to edit this file.
+
+EntryGuard Watchmen F8756C0963DC691816366AE9E950D884BE111BDC DirCache
+EntryGuardAddedBy F8756C0963DC691816366AE9E950D884BE111BDC 0.2.6.10 2015-10-22 12:40:31
+EntryGuardPathBias 18.000000 18.000000 18.000000 0.000000 0.000000 0.000000
+EntryGuardPathUseBias 3.000000 3.000000
+EntryGuard redjohn1 387B065A38E4DAA16D9D41C2964ECBC4B31D30FF DirCache
+EntryGuardDownSince 2015-11-20 20:28:58 2015-11-20 20:28:58
+EntryGuardAddedBy 387B065A38E4DAA16D9D41C2964ECBC4B31D30FF 0.2.6.10 2015-11-10 11:12:54
+EntryGuard EvolynTorRelay2 722D365140C8C52DBB3C9FF6986E3CEFFE2BA812 DirCache
+EntryGuardDownSince 2015-11-20 20:28:59 2015-11-20 20:28:59
+EntryGuardAddedBy 722D365140C8C52DBB3C9FF6986E3CEFFE2BA812 0.2.6.10 2015-11-13 04:42:23
+EntryGuard Paddington F3ECB1B7088B1B1F556C1D64C7722B2102605C89 NoDirCache
+EntryGuardDownSince 2015-11-20 20:29:05 2015-11-20 20:29:05
+EntryGuardAddedBy F3ECB1B7088B1B1F556C1D64C7722B2102605C89 0.2.6.10 2015-11-17 16:01:11
+TorVersion Tor 0.2.6.10 (git-58c51dc6087b0936)
+LastWritten 2015-11-20 20:29:27
+TotalBuildTimes 18
+CircuitBuildTimeBin 675 2
+CircuitBuildTimeBin 775 1
+CircuitBuildTimeBin 825 1
+CircuitBuildTimeBin 875 2
+CircuitBuildTimeBin 925 1
+CircuitBuildTimeBin 975 1
+CircuitBuildTimeBin 1075 2
+CircuitBuildTimeBin 1275 1
+CircuitBuildTimeBin 1325 1
+CircuitBuildTimeBin 1375 1
+CircuitBuildTimeBin 2525 1
+CircuitBuildTimeBin 3225 1
+CircuitBuildTimeBin 4675 1
+CircuitBuildTimeBin 5325 1
+CircuitBuildTimeBin 6125 1
