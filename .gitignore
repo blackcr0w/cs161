@@ -1,7 +1,6 @@
 cs161proj2 /*.o
 *.DS_Store
 cs161proj2p1.patch
-cs161-proj1-reference/*
 *.
 Makefile
 *.gz
