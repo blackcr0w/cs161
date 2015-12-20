@@ -1,0 +1,5 @@
+SocksPort 0
+ORPort 0
+DataDirectory server-datadir
+HiddenServiceDir hs-chat-dir
+HiddenServicePort 5280

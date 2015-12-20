@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+
+import getopt
+import os
+import select
+import socket
+import ssl
+import struct
+import sys
+
+def usage(f=sys.stdout):
+    f.write("""\
+Usage: %s --tls-trustfile=FILENAME HOST PORT
+
+  --disable-tls             run without TLS
+  --socks-port=PORT         use the SOCKS proxy at 127.0.0.1:PORT
+  --tls-trustfile=FILENAME  trust the root certificates in FILENAME
+  --help                    show this help
+""" % sys.argv[0])
+
+class options(object):
+    use_tls = True
+    socks_port = None
+    tls_trust_filename = None
+
+# Return a socket connected to remote_address, which is a (hostname, port)
+# tuple.
+def connect(remote_address):
+    s = socket.socket(socket.AF_INET)
+    s.connect(remote_address)
+    return s
+
+# Return a socket connected to remote_address through the SOCKS4a proxy at
+# socks_address.
+def connect_with_socks(remote_address, socks_address):
+    hostname, port = remote_address
+    s = socket.socket(socket.AF_INET)
+    # https://en.wikipedia.org/wiki/SOCKS#SOCKS4a
+    socks_request = b"\x04\x01" + struct.pack(">H", port) + b"\x00\x00\x00\x01\x00" + hostname.encode() + b"\x00"
+    s.connect(socks_address)
+    s.sendall(socks_request)
+    resp = s.recv(8)
+    try:
+        _, status, _, _ = struct.unpack(">BBHL", resp)
+    except struct.error:
+        raise socket.error("short SOCKS response: %r" % resp)
+    if status != 0x5a:
+        raise socket.error("SOCKS request failed (status 0x%02x)" % status)
+    return s
+
+# Parse command line options.
+opts, args = getopt.gnu_getopt(sys.argv[1:], "",
+    ["disable-tls", "socks-port=", "tls-trustfile=", "help"])
+for o, a in opts:
+    if o == "--disable-tls":
+        options.use_tls = False
+    elif o == "--socks-port":
+        options.socks_port = int(a)
+    elif o == "--tls-trustfile":
+        options.tls_trust_filename = a
+    elif o == "--help":
+        usage()
+        sys.exit()
+try:
+    remote_hostname, remote_port = args
+    remote_port = int(remote_port)
+except ValueError:
+    usage(sys.stderr)
+    sys.exit(1)
+
+print("connecting", file=sys.stderr)
+try:
+    if options.socks_port is not None:
+        remote_socket = connect_with_socks((remote_hostname, remote_port), ("127.0.0.1", options.socks_port))
+    else:
+        remote_socket = connect((remote_hostname, remote_port))
+except socket.error as e:
+    print("cannot connect to %s port %d: %s" % (remote_hostname, remote_port, e), file=sys.stderr)
+    sys.exit(1)
+print("connected", file=sys.stderr)
+
+if options.use_tls:
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    if options.tls_trust_filename is not None:
+        context.load_verify_locations(options.tls_trust_filename)
+    remote_socket = context.wrap_socket(remote_socket,
+        server_side=False, server_hostname=remote_hostname)
+
+# Unbuffer stdin, change to binary mode.
+sys.stdin = os.fdopen(sys.stdin.fileno(), "rb", 0)
+# Change stdout to binary mode.
+sys.stdout = os.fdopen(sys.stdout.fileno(), "wb")
+
+sendbuf = []
+while True:
+    # select.select will notify us which file handles are ready to read.
+    rset, _, _ = select.select([sys.stdin, remote_socket], [], [])
+    for s in rset:
+        if s == sys.stdin:
+            c = s.read(1)
+            if not c:
+                sys.exit()
+            # Buffer keyboard input until a newline.
+            sendbuf.append(c)
+            if c == b"\n":
+                data = b"".join(sendbuf)
+                remote_socket.sendall(data)
+                sendbuf = []
+        else:
+            try:
+                data = s.recv(1024)
+            except (ssl.SSLWantReadError, ssl.SSLWantWriteError):
+                continue
+            except socket.error:
+                data = None
+            if not data:
+                sys.exit()
+            sys.stdout.write(data)
+            sys.stdout.flush()

@@ -5,3 +5,6 @@ cs161-proj1-reference/*
 *.
 Makefile
 *.gz
+!client
+!server
+

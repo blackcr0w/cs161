@@ -1,0 +1,10 @@
+Project 2 Answer Sheet
+
+1. 60,883,825,480
+
+2. About 30 seconds.
+
+3. Since in our case, we brute-force 24 bits to mine a block, and multiply the difficulty scalar, 
+the time on my computer is about: 261494039291971502080 seconds.
+
+4. It takes 2 ^ (25 - 256) * 10 min, which is very short time, for the whole network to mine.

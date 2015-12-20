@@ -1,0 +1,37 @@
+typedef struct blockchain_node {  // jk: every node has: ptr to parent + block + validity identifier
+	struct blockchain_node *parent;
+	// struct blockchain_node *child;
+	struct block *b;
+	int is_valid;
+	hash_output curr_hash;
+	struct blockchain_node *next;  // using a double linked list to store all block nodes
+} bc_node;
+
+/* A simple linked list to keep track of account balances. */
+typedef struct balance {
+	struct ecdsa_pubkey pubkey;  // jk: claims the owner of balance
+	int balance;  // the amount of money
+	struct balance *next;  // pointes to the next balance
+} balance;
+
+/*this is used to contain the balance of each txn*/
+typedef struct pubkey_balance {
+	int balance;
+	struct ecdsa_pubkey *pubkey;
+	struct pubkey_balance *next;
+} pubkey_balance;
+
+struct block {
+	hash_output prev_block_hash;
+	uint32_t height;
+	uint32_t nonce;
+	struct transaction reward_tx;
+	struct transaction normal_tx;
+};
+
+struct transaction {
+	uint32_t height;
+	hash_output prev_transaction_hash;  // used to identify old txns liking to this new txn
+	struct ecdsa_pubkey dest_pubkey;  // the new owner
+	struct ecdsa_signature src_signature;  // old owner's private key
+};

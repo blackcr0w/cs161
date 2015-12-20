@@ -1,0 +1,3 @@
+SocksPort 9150
+ORPort 0
+DataDirectory client-datadir
